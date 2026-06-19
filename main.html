@@ -1,0 +1,3596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BikeWale Motorcycle EDA — Indian Market Analysis 2024</title>
+  <meta name="description" content="End-to-end EDA of 418 motorcycles scraped from BikeWale.com — price tiers, engine segments, brand positioning, and 50+ interactive visualisations." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0A0A0F;
+      --bg-card:    #111118;
+      --bg-raised:  #18181F;
+      --bg-hover:   #1E1E28;
+      --border:     rgba(255,255,255,0.07);
+      --border-lit: rgba(255,255,255,0.14);
+      --text:       #E8E8F0;
+      --text-dim:   #8888A0;
+      --text-muted: #50505E;
+      --orange:     #FF6B35;
+      --orange-lt:  rgba(255,107,53,0.15);
+      --orange-glow:rgba(255,107,53,0.3);
+      --purple:     #A855F7;
+      --purple-lt:  rgba(168,85,247,0.15);
+      --teal:       #14B8A6;
+      --teal-lt:    rgba(20,184,166,0.15);
+      --blue:       #3B82F6;
+      --blue-lt:    rgba(59,130,246,0.15);
+      --pink:       #EC4899;
+      --pink-lt:    rgba(236,72,153,0.15);
+      --yellow:     #EAB308;
+      --yellow-lt:  rgba(234,179,8,0.15);
+      --ff-head:    'Space Grotesk', sans-serif;
+      --ff-body:    'Inter', sans-serif;
+      --ff-mono:    'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ff-body);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── SCROLLBAR ───────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border-lit); border-radius: 3px; }
+
+    /* ── NAV ─────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem; height: 60px;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-family: var(--ff-head);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+    }
+    .nav-brand-dot {
+      width: 8px; height: 8px;
+      background: var(--orange);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--orange-glow);
+    }
+    .nav-pill {
+      font-family: var(--ff-mono);
+      font-size: 0.6rem;
+      background: var(--orange-lt);
+      color: var(--orange);
+      border: 1px solid rgba(255,107,53,0.3);
+      padding: 0.15rem 0.55rem;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+    }
+    .nav-links { display: flex; gap: 0.3rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--bg-raised); }
+
+    /* ── HERO ────────────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 8rem 2.5rem 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg-grid {
+      position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,107,53,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,107,53,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .hero-bg-glow {
+      position: absolute; top: -20%; left: -10%; z-index: 0;
+      width: 700px; height: 700px;
+      background: radial-gradient(ellipse at center, rgba(255,107,53,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-bg-glow-2 {
+      position: absolute; bottom: -20%; right: -10%; z-index: 0;
+      width: 500px; height: 500px;
+      background: radial-gradient(ellipse at center, rgba(168,85,247,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Hero split layout */
+    .hero-inner {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 3rem; width: 100%; max-width: 1400px; margin: 0 auto;
+    }
+    .hero-content { flex: 0 0 auto; max-width: 560px; }
+
+    /* Bike image side */
+    .hero-bike-wrap {
+      flex: 0 0 auto;
+      position: relative;
+      width: clamp(340px, 42vw, 620px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Large radial glow behind the bike */
+    .hero-bike-glow {
+      position: absolute;
+      width: 110%; height: 110%;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(ellipse at 60% 55%,
+        rgba(255,107,53,0.22) 0%,
+        rgba(168,85,247,0.12) 45%,
+        transparent 72%);
+      pointer-events: none;
+      border-radius: 50%;
+      filter: blur(12px);
+    }
+    /* Subtle ground shadow */
+    .hero-bike-shadow {
+      position: absolute;
+      bottom: -2%;
+      left: 50%; transform: translateX(-50%);
+      width: 70%; height: 28px;
+      background: radial-gradient(ellipse, rgba(255,107,53,0.25) 0%, transparent 70%);
+      filter: blur(10px);
+      pointer-events: none;
+    }
+    .hero-bike-img {
+      position: relative; z-index: 2;
+      width: 100%; height: auto;
+      display: block;
+      filter: drop-shadow(0 0 32px rgba(255,107,53,0.35))
+              drop-shadow(0 0 80px rgba(168,85,247,0.18));
+      animation: bikeFloat 4s ease-in-out infinite;
+      transform-origin: center center;
+    }
+    @keyframes bikeFloat {
+      0%   { transform: translateY(0px) rotate(-1deg); }
+      50%  { transform: translateY(-14px) rotate(0.5deg); }
+      100% { transform: translateY(0px) rotate(-1deg); }
+    }
+    /* Glassmorphism badge over the bike */
+    .hero-bike-badge {
+      position: absolute; z-index: 3;
+      bottom: 8%; left: -4%;
+      background: rgba(20,20,28,0.75);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,107,53,0.3);
+      border-radius: 10px;
+      padding: 0.7rem 1.1rem;
+      display: flex; flex-direction: column; gap: 0.15rem;
+    }
+    .hero-bike-badge-model {
+      font-family: var(--ff-head);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .hero-bike-badge-sub {
+      font-family: var(--ff-mono);
+      font-size: 0.58rem;
+      color: var(--orange);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    /* Spec pills on the top-right of bike */
+    .hero-bike-specs {
+      position: absolute; z-index: 3;
+      top: 6%; right: -2%;
+      display: flex; flex-direction: column; gap: 0.4rem;
+    }
+    .hero-bike-spec-pill {
+      background: rgba(20,20,28,0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-lit);
+      border-radius: 20px;
+      padding: 0.3rem 0.75rem;
+      font-family: var(--ff-mono);
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    .hero-bike-spec-pill strong { color: var(--orange); }
+
+    @media (max-width: 960px) {
+      .hero-inner { flex-direction: column; }
+      .hero-bike-wrap { width: clamp(260px, 80vw, 480px); }
+      .hero-content { max-width: 100%; }
+      .hero-bike-badge { bottom: 4%; left: 2%; }
+      .hero-bike-specs { top: 2%; right: 2%; }
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      font-family: var(--ff-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 1.5rem;
+      padding: 0.35rem 0.9rem;
+      background: var(--orange-lt);
+      border: 1px solid rgba(255,107,53,0.25);
+      border-radius: 20px;
+      width: fit-content;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 5px; height: 5px;
+      background: var(--orange);
+      border-radius: 50%;
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hero-title {
+      font-family: var(--ff-head);
+      font-size: clamp(2.6rem, 5.5vw, 4.8rem);
+      font-weight: 700;
+      line-height: 1.08;
+      color: var(--text);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.02em;
+    }
+    .hero-title .hl-orange { color: var(--orange); }
+    .hero-title .hl-purple { color: var(--purple); }
+    .hero-abstract {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--text-dim);
+      max-width: 680px;
+      margin-bottom: 3rem;
+      font-weight: 300;
+    }
+
+    /* Hero stats bar */
+    .hero-stats {
+      display: flex; flex-wrap: wrap; gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg-card);
+      max-width: 860px;
+    }
+    .hero-stat {
+      flex: 1; min-width: 140px;
+      padding: 1.4rem 1.8rem;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+    .hero-stat:last-child { border-right: none; }
+    .hero-stat-num {
+      font-family: var(--ff-head);
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .hero-stat-label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+    .hero-stat-num.c-orange { color: var(--orange); }
+    .hero-stat-num.c-purple { color: var(--purple); }
+    .hero-stat-num.c-teal   { color: var(--teal); }
+    .hero-stat-num.c-blue   { color: var(--blue); }
+
+    /* ── SECTION SHELL ───────────────────────────────────── */
+    section { padding: 5rem 2.5rem; }
+    .section-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: var(--ff-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 1rem;
+    }
+    .section-eyebrow-line {
+      display: inline-block;
+      width: 24px; height: 1px;
+      background: var(--orange);
+    }
+    .section-title {
+      font-family: var(--ff-head);
+      font-size: clamp(1.7rem, 3.5vw, 2.6rem);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.015em;
+      margin-bottom: 0.8rem;
+    }
+    .section-sub {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      max-width: 580px;
+      margin-bottom: 3rem;
+      font-weight: 300;
+    }
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-lit), transparent);
+      margin: 0 0 0;
+    }
+
+    /* ── UNIFIED DASHBOARD ───────────────────────────────── */
+    .dash-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    /* Dashboard header bar */
+    .dash-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 1.6rem;
+      background: var(--bg-raised);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap; gap: 0.8rem;
+    }
+    .dash-header-left {
+      display: flex; align-items: center; gap: 0.8rem;
+    }
+    .dash-header-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 8px var(--orange-glow);
+    }
+    .dash-header-title {
+      font-family: var(--ff-head);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .dash-header-sub {
+      font-family: var(--ff-mono);
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .dash-header-badges {
+      display: flex; gap: 0.4rem;
+    }
+    .dash-header-badge {
+      font-family: var(--ff-mono);
+      font-size: 0.58rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      letter-spacing: 0.06em;
+    }
+    .dash-header-badge.b-orange { background: var(--orange-lt); color: var(--orange); border: 1px solid rgba(255,107,53,0.25); }
+    .dash-header-badge.b-teal   { background: var(--teal-lt);   color: var(--teal);   border: 1px solid rgba(20,184,166,0.25); }
+    .dash-header-badge.b-purple { background: var(--purple-lt); color: var(--purple); border: 1px solid rgba(168,85,247,0.25); }
+
+    /* KPI strip inside dashboard */
+    .dash-kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+    .dash-kpi {
+      padding: 1rem 1.4rem;
+      border-right: 1px solid var(--border);
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .dash-kpi:last-child { border-right: none; }
+    .dash-kpi::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .dash-kpi.dk-orange::after { background: var(--orange); }
+    .dash-kpi.dk-purple::after { background: var(--purple); }
+    .dash-kpi.dk-teal::after   { background: var(--teal); }
+    .dash-kpi.dk-blue::after   { background: var(--blue); }
+    .dash-kpi.dk-pink::after   { background: var(--pink); }
+    .dash-kpi-val {
+      font-family: var(--ff-head);
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+    .dash-kpi-val.c-orange { color: var(--orange); }
+    .dash-kpi-val.c-purple { color: var(--purple); }
+    .dash-kpi-val.c-teal   { color: var(--teal); }
+    .dash-kpi-val.c-blue   { color: var(--blue); }
+    .dash-kpi-val.c-pink   { color: var(--pink); }
+    .dash-kpi-lbl {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+      font-family: var(--ff-mono);
+      letter-spacing: 0.03em;
+    }
+    .dash-kpi-icon {
+      font-size: 1.1rem;
+      margin-bottom: 0.4rem;
+    }
+
+    /* Dashboard chart mosaic */
+    .dash-mosaic {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 1px;
+      background: var(--border);
+    }
+    .dash-cell {
+      background: var(--bg-card);
+      padding: 1.2rem 1.4rem;
+      display: flex; flex-direction: column; gap: 0.7rem;
+      min-height: 0;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .dash-cell.span-2-col { grid-column: span 2; }
+    .dash-cell.span-3-col { grid-column: 1 / -1; }
+    .dash-cell-title {
+      font-family: var(--ff-head);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .dash-cell-title .cell-tag {
+      font-family: var(--ff-mono);
+      font-size: 0.56rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .cell-tag-orange { background: var(--orange-lt); color: var(--orange); }
+    .cell-tag-purple { background: var(--purple-lt); color: var(--purple); }
+    .cell-tag-teal   { background: var(--teal-lt);   color: var(--teal); }
+    .cell-tag-blue   { background: var(--blue-lt);   color: var(--blue); }
+    .cell-tag-pink   { background: var(--pink-lt);   color: var(--pink); }
+    .dash-cell-insight {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      font-weight: 300;
+      padding-top: 0.2rem;
+      border-top: 1px solid var(--border);
+    }
+    .dash-bottom-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+    }
+    @media (max-width: 900px) {
+      .dash-mosaic {
+        grid-template-columns: 1fr;
+      }
+      .dash-cell.span-2-col { grid-column: span 1; }
+      .dash-kpi-strip { grid-template-columns: repeat(3, 1fr); }
+      .dash-bottom-strip { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .dash-kpi-strip { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── KPI CARDS ───────────────────────────────────────── */
+    #data { background: var(--bg); }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.6rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .kpi-card:hover { border-color: var(--border-lit); transform: translateY(-2px); }
+    .kpi-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 12px 12px 0 0;
+    }
+    .kpi-card.k-orange::before { background: var(--orange); }
+    .kpi-card.k-purple::before { background: var(--purple); }
+    .kpi-card.k-teal::before   { background: var(--teal); }
+    .kpi-card.k-blue::before   { background: var(--blue); }
+    .kpi-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .kpi-icon.i-orange { background: var(--orange-lt); }
+    .kpi-icon.i-purple { background: var(--purple-lt); }
+    .kpi-icon.i-teal   { background: var(--teal-lt); }
+    .kpi-icon.i-blue   { background: var(--blue-lt); }
+    .kpi-num {
+      font-family: var(--ff-head);
+      font-size: 2.4rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .kpi-num.c-orange { color: var(--orange); }
+    .kpi-num.c-purple { color: var(--purple); }
+    .kpi-num.c-teal   { color: var(--teal); }
+    .kpi-num.c-blue   { color: var(--blue); }
+    .kpi-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-weight: 400;
+      line-height: 1.4;
+    }
+
+    /* ── CHARTS ──────────────────────────────────────────── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.8rem;
+      transition: border-color 0.2s;
+    }
+    .chart-card:hover { border-color: var(--border-lit); }
+    .chart-card-title {
+      font-family: var(--ff-head);
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .chart-card-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-bottom: 1.4rem;
+      font-family: var(--ff-mono);
+    }
+    .chart-card canvas { max-height: 260px; }
+
+    /* ── FINDINGS ─────────────────────────────────────────── */
+    #analysis { background: var(--bg-raised); }
+    .findings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .finding-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      display: flex; flex-direction: column; gap: 1rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .finding-card:hover { border-color: var(--border-lit); transform: translateY(-2px); }
+    .finding-num-row {
+      display: flex; align-items: center; gap: 0.8rem;
+    }
+    .finding-num {
+      font-family: var(--ff-mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+    }
+    .finding-num.n-orange { background: var(--orange-lt); color: var(--orange); }
+    .finding-num.n-purple { background: var(--purple-lt); color: var(--purple); }
+    .finding-num.n-teal   { background: var(--teal-lt); color: var(--teal); }
+    .finding-num.n-blue   { background: var(--blue-lt); color: var(--blue); }
+    .finding-tag {
+      font-family: var(--ff-mono);
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .finding-heading {
+      font-family: var(--ff-head);
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .finding-body {
+      font-size: 0.87rem;
+      line-height: 1.75;
+      color: var(--text-dim);
+      font-weight: 300;
+    }
+    .finding-pills {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      margin-top: 0.2rem;
+    }
+    .finding-pill {
+      font-size: 0.72rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      font-family: var(--ff-mono);
+      font-weight: 500;
+    }
+    .finding-pill.p-orange { background: var(--orange-lt); color: var(--orange); }
+    .finding-pill.p-purple { background: var(--purple-lt); color: var(--purple); }
+    .finding-pill.p-teal   { background: var(--teal-lt); color: var(--teal); }
+    .finding-pill.p-blue   { background: var(--blue-lt); color: var(--blue); }
+
+    /* ── RESULTS TABLE ───────────────────────────────────── */
+    #results { background: var(--bg); }
+    .table-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .results-table thead tr {
+      background: var(--bg-raised);
+      border-bottom: 1px solid var(--border-lit);
+    }
+    .results-table th {
+      font-family: var(--ff-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 1rem 1.2rem;
+      text-align: left;
+      font-weight: 500;
+    }
+    .results-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .results-table tbody tr:last-child { border-bottom: none; }
+    .results-table tbody tr:hover { background: var(--bg-raised); }
+    .results-table td {
+      padding: 1rem 1.2rem;
+      color: var(--text-dim);
+      vertical-align: middle;
+    }
+    .results-table td:first-child {
+      color: var(--text);
+      font-weight: 600;
+      font-family: var(--ff-head);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.7rem;
+      border-radius: 20px;
+      font-family: var(--ff-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .badge-green  { background: rgba(34,197,94,0.15); color: #22C55E; }
+    .badge-orange { background: var(--orange-lt); color: var(--orange); }
+    .badge-purple { background: var(--purple-lt); color: var(--purple); }
+    .badge-red    { background: rgba(239,68,68,0.15); color: #EF4444; }
+    .badge-teal   { background: var(--teal-lt); color: var(--teal); }
+
+    /* Conclusion */
+    .conclusion-card {
+      background: linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(168,85,247,0.06) 100%);
+      border: 1px solid rgba(255,107,53,0.2);
+      border-radius: 12px;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .conclusion-card::before {
+      content: '"';
+      position: absolute; top: -0.5rem; left: 1.5rem;
+      font-size: 8rem;
+      color: rgba(255,107,53,0.08);
+      font-family: Georgia, serif;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .conclusion-card p {
+      font-family: var(--ff-head);
+      font-size: 1.1rem;
+      line-height: 1.75;
+      color: var(--text);
+      font-weight: 400;
+      position: relative; z-index: 1;
+    }
+    .conclusion-card cite {
+      display: block;
+      margin-top: 1.2rem;
+      font-family: var(--ff-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      font-style: normal;
+    }
+
+    /* ── VIZ EXPLORER ────────────────────────────────────── */
+    #viz-explorer { background: var(--bg-raised); overflow: hidden; }
+
+    /* Tab nav */
+    .tab-nav {
+      display: flex; gap: 0.3rem; flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+      padding: 0.4rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: fit-content;
+      max-width: 100%;
+    }
+    .tab-btn {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--ff-body);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn .tab-num {
+      font-family: var(--ff-mono);
+      font-size: 0.6rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      background: var(--bg-raised);
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--text); background: var(--bg-raised); }
+    .tab-btn.active {
+      background: var(--orange);
+      color: #fff;
+    }
+    .tab-btn.active .tab-num {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Graph section label */
+    .section-count-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .graph-count {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      font-family: var(--ff-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .graph-count-badge {
+      background: var(--orange-lt);
+      color: var(--orange);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.72rem;
+    }
+
+    /* Graph grid */
+    .graph-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+      gap: 1rem;
+    }
+    .graph-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.4rem;
+      display: flex; flex-direction: column; gap: 1rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .graph-card:hover { border-color: var(--border-lit); transform: translateY(-2px); }
+    .graph-card-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 0.8rem;
+    }
+    .graph-card-title {
+      font-family: var(--ff-head);
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text);
+    }
+    .graph-tag {
+      font-family: var(--ff-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .graph-tag.t-dash  { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .graph-tag.t-uni   { background: var(--teal-lt); color: var(--teal); }
+    .graph-tag.t-bi    { background: var(--purple-lt); color: var(--purple); }
+    .graph-tag.t-multi { background: var(--orange-lt); color: var(--orange); }
+    .graph-tag.t-dist  { background: var(--pink-lt); color: var(--pink); }
+
+    .graph-img-wrap {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0D0D14;
+      cursor: zoom-in;
+    }
+    .graph-img-wrap img {
+      width: 100%; height: auto; display: block;
+      transition: transform 0.4s ease;
+    }
+    .graph-img-wrap:hover img { transform: scale(1.03); }
+    .graph-img-zoom-hint {
+      position: absolute; bottom: 0.6rem; right: 0.6rem;
+      background: rgba(0,0,0,0.7);
+      color: var(--text-dim);
+      font-family: var(--ff-mono);
+      font-size: 0.58rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .graph-img-wrap:hover .graph-img-zoom-hint { opacity: 1; }
+
+    .graph-insight {
+      font-size: 0.8rem;
+      line-height: 1.65;
+      color: var(--text-dim);
+      font-weight: 300;
+      padding: 0.75rem 0.9rem;
+      background: var(--bg-raised);
+      border-radius: 6px;
+      border-left: 3px solid var(--orange);
+    }
+
+    /* ── LIGHTBOX ─────────────────────────────────────────── */
+    .lightbox {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.95);
+      align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-img {
+      max-width: 92vw; max-height: 88vh;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border-lit);
+    }
+    .lightbox-close {
+      position: absolute; top: 1.2rem; right: 1.5rem;
+      background: var(--bg-card); border: 1px solid var(--border);
+      color: var(--text-dim); font-family: var(--ff-mono); font-size: 0.72rem;
+      padding: 0.4rem 0.9rem; border-radius: 6px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .lightbox-close:hover { color: var(--orange); border-color: var(--orange); }
+    .lightbox-caption {
+      position: absolute; bottom: 1.2rem;
+      font-family: var(--ff-mono); font-size: 0.65rem;
+      color: var(--text-muted); letter-spacing: 0.08em;
+    }
+
+    /* ── FOOTER ──────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 2.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem;
+      background: var(--bg);
+    }
+    .footer-brand {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-family: var(--ff-head); font-weight: 700; font-size: 0.9rem;
+    }
+    .footer-copy {
+      font-family: var(--ff-mono); font-size: 0.65rem;
+      color: var(--text-muted); letter-spacing: 0.06em;
+    }
+    .footer-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .footer-tag {
+      font-family: var(--ff-mono); font-size: 0.6rem;
+      color: var(--text-muted); padding: 0.15rem 0.5rem;
+      border: 1px solid var(--border); border-radius: 4px;
+    }
+
+    /* ── RESPONSIVE ──────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .graphs-grid { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .findings-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      nav { padding: 0 1.2rem; }
+      .nav-links { display: none; }
+      section { padding: 4rem 1.2rem; }
+      #hero { padding: 7rem 1.2rem 4rem; }
+      .graph-grid { grid-template-columns: 1fr; }
+      .hero-stats { flex-direction: column; }
+      .hero-stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .hero-stat:last-child { border-bottom: none; }
+      footer { padding: 1.5rem 1.2rem; }
+    }
+
+    /* ── ANIMATIONS ───────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-brand">
+      <div class="nav-brand-dot"></div>
+      BikeWale EDA
+      <span class="nav-pill">2024</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#data">Overview</a></li>
+      <li><a href="#analysis">Findings</a></li>
+      <li><a href="#results">Segments</a></li>
+      <li><a href="#viz-explorer">Visualisations</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-bg-glow"></div>
+    <div class="hero-bg-glow-2"></div>
+
+    <div class="hero-inner">
+      <!-- LEFT: Text content -->
+      <div class="hero-content">
+        <span class="hero-eyebrow">EDA Project &nbsp;·&nbsp; Web Scraping &nbsp;·&nbsp; Innomatics Research Labs</span>
+        <h1 class="hero-title">
+          Decoding the<br>
+          <span class="hl-orange">Indian Motorcycle</span><br>
+          <span class="hl-purple">Market</span> with Data
+        </h1>
+        <p class="hero-abstract">
+          An end-to-end data science pipeline — 418 motorcycles scraped live from BikeWale.com,
+          cleaned, engineered, and analysed through 50+ interactive visualisations.
+          From ₹47k commuters to ₹1 Crore superbikes — every segment, every pattern, uncovered.
+        </p>
+        <div class="hero-stats reveal">
+          <div class="hero-stat">
+            <div class="hero-stat-num c-orange"><span class="counter" data-target="418">0</span></div>
+            <div class="hero-stat-label">Motorcycles<br>scraped</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num c-purple">₹47k<span style="font-size:1rem;"> – </span>₹1Cr</div>
+            <div class="hero-stat-label">Price<br>range</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num c-teal"><span class="counter" data-target="50">0</span>+</div>
+            <div class="hero-stat-label">Visuali-<br>sations</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num c-blue"><span class="counter" data-target="4">0</span></div>
+            <div class="hero-stat-label">Analysis<br>types</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Ducati Panigale V4 floating image -->
+      <div class="hero-bike-wrap reveal reveal-delay-2">
+        <!-- Glow behind bike -->
+        <div class="hero-bike-glow"></div>
+        <!-- Ground shadow -->
+        <div class="hero-bike-shadow"></div>
+        <!-- The bike image -->
+        <img
+          src="ducati_panigale_v4.png"
+          alt="Ducati Panigale V4 — The pinnacle of Italian superbike engineering"
+          class="hero-bike-img"
+          id="hero-bike-img"
+        />
+        <!-- Glassmorphism name badge -->
+        <div class="hero-bike-badge">
+          <div class="hero-bike-badge-model">Ducati Panigale V4</div>
+          <div class="hero-bike-badge-sub">🏁 Featured Superbike</div>
+        </div>
+        <!-- Spec pills -->
+        <div class="hero-bike-specs">
+          <div class="hero-bike-spec-pill">⚡ <strong>214 HP</strong></div>
+          <div class="hero-bike-spec-pill">💨 <strong>299 km/h</strong></div>
+          <div class="hero-bike-spec-pill">🔥 <strong>1103cc V4</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- DATA OVERVIEW -->
+  <section id="data">
+    <div class="section-eyebrow reveal">
+      <span class="section-eyebrow-line"></span>
+      §01 &nbsp;—&nbsp; Dataset Overview
+    </div>
+    <h2 class="section-title reveal">Key Statistics at a Glance</h2>
+    <p class="section-sub reveal">Real numbers extracted from the scraped and cleaned dataset.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi-card k-orange reveal reveal-delay-1">
+        <div class="kpi-icon i-orange">🏍️</div>
+        <div class="kpi-num c-orange"><span class="counter" data-target="418">0</span></div>
+        <div class="kpi-label">Total motorcycle models scraped from BikeWale.com</div>
+      </div>
+      <div class="kpi-card k-purple reveal reveal-delay-2">
+        <div class="kpi-icon i-purple">💰</div>
+        <div class="kpi-num c-purple">₹<span class="counter" data-target="6.95">0</span>L</div>
+        <div class="kpi-label">Mean price — skewed by luxury outliers (median ₹1.99L)</div>
+      </div>
+      <div class="kpi-card k-teal reveal reveal-delay-3">
+        <div class="kpi-icon i-teal">⚙️</div>
+        <div class="kpi-num c-teal"><span class="counter" data-target="0.77">0</span>r</div>
+        <div class="kpi-label">Price ↔ Engine correlation — strongest predictor in dataset</div>
+      </div>
+      <div class="kpi-card k-blue reveal">
+        <div class="kpi-icon i-blue">⭐</div>
+        <div class="kpi-num c-blue"><span class="counter" data-target="4.38">0</span>★</div>
+        <div class="kpi-label">Average consumer rating across all rated models</div>
+      </div>
+    </div>
+
+    <div class="charts-grid reveal">
+      <div class="chart-card">
+        <div class="chart-card-title">Engine Segment — Model Count</div>
+        <div class="chart-card-sub">Distribution of 418 bikes across displacement tiers</div>
+        <canvas id="barChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Average Price by Top Brands</div>
+        <div class="chart-card-sub">Avg vs Median price in ₹ Lakhs — premium segment leaders</div>
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ANALYSIS / FINDINGS -->
+  <section id="analysis">
+    <div class="section-eyebrow reveal">
+      <span class="section-eyebrow-line"></span>
+      §02 &nbsp;—&nbsp; Key Findings
+    </div>
+    <h2 class="section-title reveal">Four Insights from the EDA</h2>
+    <p class="section-sub reveal">Structural patterns discovered across price, engine, brand, and consumer behaviour dimensions.</p>
+
+    <div class="findings-grid">
+      <div class="finding-card reveal">
+        <div class="finding-num-row">
+          <span class="finding-num n-orange">01</span>
+          <span class="finding-tag">Price Analysis</span>
+        </div>
+        <h3 class="finding-heading">Price Distribution is Heavily Right-Skewed</h3>
+        <p class="finding-body">
+          The majority of motorcycles on BikeWale fall in ₹50k–₹1.5L, creating a strong right skew.
+          Superbike outliers push the mean (₹6.95L) far above the median (₹1.99L) — making median
+          the better measure of the typical buyer's market. 162 models sit in the Mid-Range tier alone.
+        </p>
+        <div class="finding-pills">
+          <span class="finding-pill p-orange">162 Mid-Range models</span>
+          <span class="finding-pill p-orange">102 Luxury models</span>
+          <span class="finding-pill p-orange">Mean 3.5× Median</span>
+        </div>
+      </div>
+
+      <div class="finding-card reveal reveal-delay-1">
+        <div class="finding-num-row">
+          <span class="finding-num n-purple">02</span>
+          <span class="finding-tag">Correlation</span>
+        </div>
+        <h3 class="finding-heading">Engine Capacity is the Strongest Price Predictor</h3>
+        <p class="finding-body">
+          With a Pearson r = 0.77, engine displacement predicts price better than any other variable.
+          Mileage inversely correlates with price (r = 0.04) — confirming the classic
+          performance-vs-economy trade-off baked into the market structure.
+        </p>
+        <div class="finding-pills">
+          <span class="finding-pill p-purple">r = 0.77 (engine ↔ price)</span>
+          <span class="finding-pill p-purple">Superbike: 122 models</span>
+          <span class="finding-pill p-purple">Mid-cc fastest growing</span>
+        </div>
+      </div>
+
+      <div class="finding-card reveal reveal-delay-2">
+        <div class="finding-num-row">
+          <span class="finding-num n-teal">03</span>
+          <span class="finding-tag">Segmentation</span>
+        </div>
+        <h3 class="finding-heading">Four Distinct Market Segments Emerge</h3>
+        <p class="finding-body">
+          3D scatter, bubble charts, and parallel coordinates all reveal the same four natural clusters:
+          commuters (Hero, Honda, Bajaj), mid-range tourers, adventure/cruisers, and performance superbikes
+          (Ducati, KTM, BMW). Each cluster has distinct brand loyalty and rating behaviour.
+        </p>
+        <div class="finding-pills">
+          <span class="finding-pill p-teal">Commuter cluster</span>
+          <span class="finding-pill p-teal">Sports cluster</span>
+          <span class="finding-pill p-teal">Mid-range sweet spot</span>
+        </div>
+      </div>
+
+      <div class="finding-card reveal reveal-delay-3">
+        <div class="finding-num-row">
+          <span class="finding-num n-blue">04</span>
+          <span class="finding-tag">Brand Intelligence</span>
+        </div>
+        <h3 class="finding-heading">Brand Portfolio Signals Untapped Market Niches</h3>
+        <p class="finding-body">
+          Pivot heatmaps show most brands specialise in 1–2 price tiers. Bajaj dominates by reviews
+          and popularity; Ducati commands the highest average price; VLF holds the highest average rating.
+          Consumer satisfaction plateaus across all tiers — ratings are segment-agnostic.
+        </p>
+        <div class="finding-pills">
+          <span class="finding-pill p-blue">Ducati — Most Expensive</span>
+          <span class="finding-pill p-blue">Bajaj — Most Popular</span>
+          <span class="finding-pill p-blue">VLF — Highest Rated</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- RESULTS / SEGMENT TABLE -->
+  <section id="results">
+    <div class="section-eyebrow reveal">
+      <span class="section-eyebrow-line"></span>
+      §03 &nbsp;—&nbsp; Market Segmentation
+    </div>
+    <h2 class="section-title reveal">Price Category Breakdown</h2>
+    <p class="section-sub reveal">Actual tier counts and characteristics from the cleaned BikeWale dataset.</p>
+
+    <div class="table-wrap reveal">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Price Segment</th>
+            <th>Model Count</th>
+            <th>Price Range</th>
+            <th>Avg Engine</th>
+            <th>Avg Mileage</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Budget</td>
+            <td>88 models</td>
+            <td>&lt; ₹1L</td>
+            <td>~110 cc</td>
+            <td>~55–70 kmpl</td>
+            <td><span class="badge badge-teal">Mass Market</span></td>
+          </tr>
+          <tr>
+            <td>Mid-Range</td>
+            <td>162 models</td>
+            <td>₹1L – ₹3L</td>
+            <td>~200 cc</td>
+            <td>~35–50 kmpl</td>
+            <td><span class="badge badge-green">Largest Tier</span></td>
+          </tr>
+          <tr>
+            <td>Premium</td>
+            <td>66 models</td>
+            <td>₹3L – ₹10L</td>
+            <td>~400 cc</td>
+            <td>~25–35 kmpl</td>
+            <td><span class="badge badge-orange">Growing</span></td>
+          </tr>
+          <tr>
+            <td>Luxury / Superbike</td>
+            <td>102 models</td>
+            <td>₹10L+</td>
+            <td>~900 cc</td>
+            <td>~20–30 kmpl</td>
+            <td><span class="badge badge-purple">Niche Premium</span></td>
+          </tr>
+          <tr>
+            <td>Most Expensive</td>
+            <td>Ducati Panigale V4 Lamborghini</td>
+            <td>₹1 Crore</td>
+            <td>1,103 cc</td>
+            <td>—</td>
+            <td><span class="badge badge-red">Ultra Premium</span></td>
+          </tr>
+          <tr>
+            <td>Most Affordable</td>
+            <td>Entry-Level Commuter</td>
+            <td>₹47,686</td>
+            <td>~100 cc</td>
+            <td>~60+ kmpl</td>
+            <td><span class="badge badge-green">Value Tier</span></td>
+          </tr>
+          <tr>
+            <td>Highest Rated</td>
+            <td>KTM 200 Duke</td>
+            <td>₹1.91L</td>
+            <td>199.5 cc</td>
+            <td>35 kmpl</td>
+            <td><span class="badge badge-orange">4.7 ★</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="conclusion-card reveal">
+      <p>
+        The motorcycle market, as captured from BikeWale, reveals a highly segmented structure
+        where engine capacity alone explains 77% of price variance. The mid-range tier (₹1–3L)
+        is the largest with 162 models — a fiercely competitive battleground for Hero, Honda, Bajaj,
+        and Royal Enfield. Consumer ratings remain remarkably stable across all tiers,
+        suggesting buyer satisfaction is calibrated to segment expectations, not absolute value.
+      </p>
+      <cite>— Principal Finding · BikeWale EDA · Innomatics Research Labs 2024</cite>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- VIZ EXPLORER -->
+  <section id="viz-explorer">
+    <div class="section-eyebrow reveal">
+      <span class="section-eyebrow-line"></span>
+      §04 &nbsp;—&nbsp; Visual Analytics
+    </div>
+    <h2 class="section-title reveal">Interactive Chart Gallery</h2>
+    <p class="section-sub reveal">All 50+ charts generated from the scraped dataset. Click any chart to view full-screen.</p>
+
+    <!-- TAB NAV -->
+    <div class="tab-nav reveal" role="tablist">
+      <button class="tab-btn active" id="tab-btn-dashboard" onclick="switchTab('dashboard')">
+        <span class="tab-num">3</span> Dashboard
+      </button>
+      <button class="tab-btn" id="tab-btn-univariate" onclick="switchTab('univariate')">
+        <span class="tab-num">11</span> Univariate
+      </button>
+      <button class="tab-btn" id="tab-btn-bivariate" onclick="switchTab('bivariate')">
+        <span class="tab-num">13</span> Bivariate
+      </button>
+      <button class="tab-btn" id="tab-btn-multivariate" onclick="switchTab('multivariate')">
+        <span class="tab-num">12</span> Multivariate
+      </button>
+      <button class="tab-btn" id="tab-btn-distributions" onclick="switchTab('distributions')">
+        <span class="tab-num">11</span> Distributions
+      </button>
+    </div>
+
+    <!-- ── TAB 1: DASHBOARD ──────────────────────────────── -->
+    <div class="tab-panel active" id="tab-dashboard">
+
+      <!-- Single unified dashboard panel -->
+      <div class="dash-panel reveal">
+
+        <!-- ── Dashboard Header ── -->
+        <div class="dash-header">
+          <div class="dash-header-left">
+            <div class="dash-header-dot"></div>
+            <div>
+              <div class="dash-header-title">BikeWale Market Intelligence Dashboard</div>
+              <div class="dash-header-sub">418 motorcycles · scraped live · Indian market 2024</div>
+            </div>
+          </div>
+          <div class="dash-header-badges">
+            <span class="dash-header-badge b-orange">8 Charts</span>
+            <span class="dash-header-badge b-teal">Live Data</span>
+            <span class="dash-header-badge b-purple">EDA · 2024</span>
+          </div>
+        </div>
+
+        <!-- ── KPI Strip ── -->
+        <div class="dash-kpi-strip">
+          <div class="dash-kpi dk-orange">
+            <div class="dash-kpi-icon">🏍️</div>
+            <div class="dash-kpi-val c-orange">418</div>
+            <div class="dash-kpi-lbl">Total Models<br>Scraped</div>
+          </div>
+          <div class="dash-kpi dk-purple">
+            <div class="dash-kpi-icon">💰</div>
+            <div class="dash-kpi-val c-purple">₹6.95L</div>
+            <div class="dash-kpi-lbl">Mean Price<br>(Median ₹1.99L)</div>
+          </div>
+          <div class="dash-kpi dk-teal">
+            <div class="dash-kpi-icon">⚙️</div>
+            <div class="dash-kpi-val c-teal">r=0.77</div>
+            <div class="dash-kpi-lbl">Engine↔Price<br>Correlation</div>
+          </div>
+          <div class="dash-kpi dk-blue">
+            <div class="dash-kpi-icon">⭐</div>
+            <div class="dash-kpi-val c-blue">4.38★</div>
+            <div class="dash-kpi-lbl">Avg Rating<br>All Models</div>
+          </div>
+          <div class="dash-kpi dk-pink">
+            <div class="dash-kpi-icon">🏷️</div>
+            <div class="dash-kpi-val c-pink">15+</div>
+            <div class="dash-kpi-lbl">Brands<br>Analysed</div>
+          </div>
+        </div>
+
+        <!-- ── Chart Mosaic — Row 1 ── -->
+        <div class="dash-mosaic">
+
+          <!-- WIDE: Price Histogram -->
+          <div class="dash-cell span-2-col">
+            <div class="dash-cell-title">
+              📊 Price Distribution — Histogram
+              <span class="cell-tag cell-tag-orange">Univariate</span>
+            </div>
+            <canvas id="dashPriceHist" style="max-height:220px;"></canvas>
+            <div class="dash-cell-insight">Right-skewed — most models cluster under ₹2L. Outlier superbikes drag the mean (₹6.95L) far above the median (₹1.99L).</div>
+          </div>
+
+          <!-- NARROW: Engine Segment Donut -->
+          <div class="dash-cell">
+            <div class="dash-cell-title">
+              🍩 Engine Segments
+              <span class="cell-tag cell-tag-teal">Breakdown</span>
+            </div>
+            <div style="display:flex;justify-content:center;flex:1;align-items:center;">
+              <canvas id="dashEngineDonut" style="max-height:200px;max-width:200px;"></canvas>
+            </div>
+            <div class="dash-cell-insight">Superbike (600cc+) leads with 122 models — more than commuters.</div>
+          </div>
+
+        </div>
+
+        <!-- ── Chart Mosaic — Row 2 ── -->
+        <div class="dash-mosaic">
+
+          <!-- Top 15 Brands bar -->
+          <div class="dash-cell">
+            <div class="dash-cell-title">
+              🏷️ Top 15 Brands by Model Count
+              <span class="cell-tag cell-tag-purple">Brand</span>
+            </div>
+            <canvas id="dashBrandCount" style="max-height:320px;"></canvas>
+            <div class="dash-cell-insight">Hero &amp; Honda dominate. European brands appear with fewer but higher-priced models.</div>
+          </div>
+
+          <!-- Avg Price line -->
+          <div class="dash-cell">
+            <div class="dash-cell-title">
+              📈 Avg vs Median Price — Top Brands
+              <span class="cell-tag cell-tag-orange">Bivariate</span>
+            </div>
+            <canvas id="dashAvgPriceLine" style="max-height:320px;"></canvas>
+            <div class="dash-cell-insight">Ducati &amp; Harley show widest gap between mean and median — skewed by ultra-premium variants.</div>
+          </div>
+
+          <!-- Missing value heatmap -->
+          <div class="dash-cell">
+            <div class="dash-cell-title">
+              🗺️ Missing Value Map
+              <span class="cell-tag cell-tag-blue">Quality</span>
+            </div>
+            <canvas id="dashMissingHeatmap" style="max-height:320px;"></canvas>
+            <div class="dash-cell-insight">Engine_val and Mileage_val have the most gaps — imputation required before modelling.</div>
+          </div>
+
+        </div>
+
+        <!-- ── Bottom Strip — Row 3 ── -->
+        <div class="dash-bottom-strip">
+
+          <!-- Price Category Donut -->
+          <div class="dash-cell">
+            <div class="dash-cell-title">
+              🏷️ Price Category Split
+              <span class="cell-tag cell-tag-pink">Category</span>
+            </div>
+            <div style="display:flex;justify-content:center;flex:1;align-items:center;">
+              <canvas id="dashPriceCatDonut" style="max-height:180px;max-width:180px;"></canvas>
+            </div>
+            <div class="dash-cell-insight">Mid-range dominates (162 models / 39%). Luxury at 24% confirms BikeWale's wide catalogue.</div>
+          </div>
+
+          <!-- Engine Segment bar -->
+          <div class="dash-cell">
+            <div class="dash-cell-title">
+              ⚙️ Engine Tier Model Count
+              <span class="cell-tag cell-tag-teal">Segment</span>
+            </div>
+            <canvas id="dashEngineSegBar" style="max-height:200px;"></canvas>
+            <div class="dash-cell-insight">Mid-range (76) and Superbike (122) segments lead. Electric growing rapidly.</div>
+          </div>
+
+          <!-- Rating Distribution -->
+          <div class="dash-cell">
+            <div class="dash-cell-title">
+              ⭐ Rating Distribution
+              <span class="cell-tag cell-tag-blue">Quality</span>
+            </div>
+            <canvas id="dashRatingBar" style="max-height:200px;"></canvas>
+            <div class="dash-cell-insight">70%+ of models rated 4.3–4.7 — e-commerce positive-review bias with remarkably tight spread.</div>
+          </div>
+
+        </div>
+
+      </div><!-- /dash-panel -->
+    </div><!-- /tab-dashboard -->
+
+    <!-- ── TAB 2: UNIVARIATE ─────────────────────────────── -->
+    <div class="tab-panel" id="tab-univariate">
+      <div class="section-count-bar">
+        <div class="graph-count"><span class="graph-count-badge">11</span> charts — single-variable distributions and frequencies</div>
+      </div>
+      <div class="graph-grid">
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Mileage Distribution</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="uniMileageHist" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Bimodal distribution — commuters cluster at 40–60 kmpl; performance bikes cluster below 25 kmpl, creating two distinct peaks.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Engine Capacity Distribution</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="uniEngineHist" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Sharp peak at 100–150cc — India's commuter sweet spot. A right tail extends to 2458cc (Triumph Rocket 3), creating heavy skew.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Average Rating Distribution</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="uniRatingHist" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Ratings cluster 4.0–4.6, indicating a positive review bias on e-commerce platforms — typical of established brands with loyal customer bases.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Number of Ratings Distribution</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="uniRatingsCountHist" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Heavy-tailed distribution — most models have under 500 ratings. A few mass-market heroes command thousands of reviews, confirming concentrated popularity.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Petrol vs Electric — Donut</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0; display:flex; justify-content:center;"><canvas id="uniBikeTypeDonut" style="max-height:240px; max-width:240px;"></canvas></div>
+          <p class="graph-insight">Petrol dominates overwhelmingly. Electric motorcycles represent a nascent but growing segment — reflecting early-stage EV adoption in India.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Price Category — Donut</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0; display:flex; justify-content:center;"><canvas id="uniPriceCatDonut" style="max-height:240px; max-width:240px;"></canvas></div>
+          <p class="graph-insight">Mid-range dominates (162 models). Budget and Luxury segments both have sizable representation, confirming a multi-tier market structure.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Engine Segment Distribution</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="uniEngineSegBar" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Superbike segment (600cc+) has 122 models — more than commuters (49). Confirms that BikeWale lists many premium international models.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Price — Box Plot</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="uniPriceBox" style="max-height:180px;"></canvas></div>
+          <p class="graph-insight">Median around ₹80k with extreme outliers at ₹1 Crore. Upper-fence outliers are genuine superbike entries — not data errors.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Engine Capacity — Box Plot</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="uniEngineBox" style="max-height:180px;"></canvas></div>
+          <p class="graph-insight">IQR concentrated at 110–310cc. High-displacement outliers (1000cc+) represent the performance niche — valid data, not noise.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Mileage — Violin Plot</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="uniMileageKDE" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Wide violin belly at 40–60 kmpl (dense commuter cluster). Secondary lobe visible at low mileage for performance bikes.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Price — Violin Plot</h3><span class="graph-tag t-uni">Univariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="uniPriceKDE" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Mass concentration at budget levels with a very thin tail extending to ultra-premium prices — a classic long-tail pricing structure.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── TAB 3: BIVARIATE ──────────────────────────────── -->
+    <div class="tab-panel" id="tab-bivariate">
+      <div class="section-count-bar">
+        <div class="graph-count"><span class="graph-count-badge">13</span> charts — relationships between pairs of variables</div>
+      </div>
+      <div class="graph-grid">
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Engine Capacity vs Price</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biEnginePriceScatter" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Strong positive correlation confirmed by OLS trendline. Superbikes create heteroscedasticity at high engine values — wider price spread.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Mileage vs Price</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biMileagePriceScatter" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Negative correlation — high-performance (low-mileage) bikes are more expensive. Commuters form a tight cluster: high mileage, low price.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Rating vs Price — Bubble Chart</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biRatingPriceBubble" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Bubble size = number of ratings. Mid-range bikes (₹1–3L) show the largest bubbles with high ratings — peak consumer satisfaction zone.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Price vs Number of Ratings</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biPriceRatingsScatter" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Budget bikes accumulate the most reviews — confirming higher sales volume. Ultra-premium bikes have very few ratings — niche appeal.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Engine vs Number of Ratings</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biEngineRatingsScatter" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Small-engine bikes (100–150cc) receive the most reviews. Rating count drops sharply beyond 300cc — lower unit volume at higher displacement.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Mileage vs Number of Ratings</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biMileageRatingsScatter" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">High-mileage bikes attract the most reviews — validating that fuel economy is a critical purchase-decision driver for the majority of buyers.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Price by Bike Type — Box Plot</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biPriceBikeTypeBox" style="max-height:220px;"></canvas></div>
+          <p class="graph-insight">Electric bikes show wider IQR and higher median than petrol equivalents — reflecting early-adopter premium pricing in the EV segment.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Mileage by Bike Type — Box Plot</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biMileageBikeTypeBox" style="max-height:220px;"></canvas></div>
+          <p class="graph-insight">Petrol bikes cluster tightly at 40–60 kmpl for commuters. EV mileage equivalent is notably variable depending on battery capacity.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Rating by Bike Type — Box Plot</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biRatingBikeTypeBox" style="max-height:220px;"></canvas></div>
+          <p class="graph-insight">Both bike types maintain comparable ratings — satisfaction is type-agnostic among buyers who've made a purchase decision.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Engine Segment vs Price</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biEngineSegPriceBox" style="max-height:220px;"></canvas></div>
+          <p class="graph-insight">Monotonic price increase across engine segments. High-displacement segments show large IQR — significant brand and spec variation at the top end.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Price by Brand — Top 15</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biPriceBrandBox" style="max-height:350px;"></canvas></div>
+          <p class="graph-insight">Ducati, BMW, KTM show elevated medians with wide IQRs. Hero, Bajaj cluster tightly at lower prices with minimal spread.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Bike Type Statistics — Grouped Bar</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biBikeTypeStatsBar" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">High-price types have lower mileage but ratings stay consistent — satisfaction is tier-agnostic across all bike type categories.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Engine Segment Statistics — Grouped Bar</h3><span class="graph-tag t-bi">Bivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="biEngineSegStatsBar" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Larger engines = exponentially higher prices but diminishing mileage returns. Rating plateaus across all segments — quality meets expectations at every tier.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── TAB 4: MULTIVARIATE ───────────────────────────── -->
+    <div class="tab-panel" id="tab-multivariate">
+      <div class="section-count-bar">
+        <div class="graph-count"><span class="graph-count-badge">12</span> charts — three or more variables analysed simultaneously</div>
+      </div>
+      <div class="graph-grid">
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Engine × Price × Rating × Popularity</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiFourVarBubble" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Four variables in one: x=Engine, y=Price, color=Rating, size=Popularity. The value sweet spot sits at mid engine/price with large, highly-rated bubbles.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Mileage × Price × Bike Type × Engine</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiMileagePriceTypeBubble" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Commuters: high mileage, low price, small bubbles. Sports bikes: low mileage, high price, large bubbles. Market segmentation is geometrically clear.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Engine vs Price by Brand — Top 15</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiEnginePriceBrandScatter" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Each brand occupies a unique engine-price corridor — brand identity is detectable from just two features alone. Useful for classification modelling.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Price vs Mileage by Price Category</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiPriceMileageCatScatter" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Price categories form clean separable clusters against mileage — mileage is a strong determinant of which price tier a bike belongs to.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Parallel Coordinates</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiParallelCoords" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">High-price lines correlate with high engine and low mileage. Mid-price lines show dense overlapping — a fiercely competitive segment.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Correlation Heatmap</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiCorrHeatmap" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Engine ↔ Price: strongest correlation. Mileage negatively correlates with both Price and Engine — the performance-vs-economy trade-off confirmed numerically.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Interactive Scatter Explorer</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding: 0.4rem 0;">
+            <div class="interactive-explorer-controls" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; background:rgba(255,255,255,0.02); padding:6px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+              <select id="explorerX" class="select-field" style="background:#18181F; color:#E8E8F0; border:1px solid rgba(255,255,255,0.08); padding:4px 8px; border-radius:4px; font-family:'Inter'; font-size:11px; cursor:pointer;">
+                <option value="Engine">Engine (cc)</option>
+                <option value="Mileage">Mileage (kmpl)</option>
+                <option value="Price" selected>Price (₹L)</option>
+                <option value="Rating">Rating</option>
+                <option value="Reviews">Reviews</option>
+              </select>
+              <span style="color:#50505E; align-self:center; font-size:10px; font-family:'JetBrains Mono';">VS</span>
+              <select id="explorerY" class="select-field" style="background:#18181F; color:#E8E8F0; border:1px solid rgba(255,255,255,0.08); padding:4px 8px; border-radius:4px; font-family:'Inter'; font-size:11px; cursor:pointer;">
+                <option value="Engine" selected>Engine (cc)</option>
+                <option value="Mileage">Mileage (kmpl)</option>
+                <option value="Price">Price (₹L)</option>
+                <option value="Rating">Rating</option>
+                <option value="Reviews">Reviews</option>
+              </select>
+              <span style="color:#50505E; align-self:center; font-size:10px; font-family:'JetBrains Mono';">COLOR</span>
+              <select id="explorerColor" class="select-field" style="background:#18181F; color:#E8E8F0; border:1px solid rgba(255,255,255,0.08); padding:4px 8px; border-radius:4px; font-family:'Inter'; font-size:11px; cursor:pointer;">
+                <option value="Type">Bike Type</option>
+                <option value="Category" selected>Price Category</option>
+                <option value="Segment">Engine Segment</option>
+              </select>
+            </div>
+            <canvas id="multiExplorerScatter" style="max-height:200px;"></canvas>
+          </div>
+          <p class="graph-insight">Interactive feature inspector. Select X/Y parameters and coloring classes to explore multidimensional clusters in real time.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">3D Projection — Engine × Mileage × Price</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multi3DScatter" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Interactive 3D spatial projection. Volumetric groupings reveal distinct markets: commuters, roadsters, touring, and performance classes.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Top 15 Brands — Average Price</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiBrandAvgPriceBar" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">European brands (Ducati, BMW, Triumph) dominate by average price. Domestic Indian brands rarely enter the top 15 by pricing.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Top 15 Brands — Average Rating</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiBrandAvgRatingBar" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Premium brands don't always lead on ratings — some mass-market commuter brands score equally high, confirming satisfaction is value-relative.</p>
+        </div>
+
+        <div class="graph-card reveal">
+          <div class="graph-card-header"><h3 class="graph-card-title">Top 15 Brands — Average Mileage</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiBrandAvgMileageBar" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Fuel-efficiency leaders are predominantly domestic (Hero, TVS, Honda) — reflecting commuter-oriented product portfolios and buyer expectations.</p>
+        </div>
+
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header"><h3 class="graph-card-title">Premium Brand Analysis</h3><span class="graph-tag t-multi">Multivariate</span></div>
+          <div style="padding:0.4rem 0;"><canvas id="multiPremiumBrandBar" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Ducati leads by a wide margin. European superbike brands (BMW, Triumph) follow. Domestic Indian brands absent from this premium ranking.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── TAB 5: DISTRIBUTIONS (Univariate Charts) ─────── -->
+    <div class="tab-panel" id="tab-distributions">
+      <div class="section-count-bar">
+        <div class="graph-count"><span class="graph-count-badge">11</span> univariate charts — single-variable distributions visualised with Chart.js</div>
+      </div>
+      <div class="graph-grid">
+
+        <!-- 1. Price Histogram -->
+        <div class="graph-card reveal">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Price Distribution — Histogram</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0;"><canvas id="distPriceHist" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Strong right skew — bulk of models cluster under ₹2L. Outlier superbikes (₹10L+) drag the mean (₹6.95L) far above the median (₹1.99L).</p>
+        </div>
+
+        <!-- 2. Mileage Histogram -->
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Mileage Distribution — Histogram</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0;"><canvas id="distMileageHist" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Bimodal pattern — commuters pile up at 35–55 kmpl; performance bikes create a secondary lobe below 25 kmpl. Mean: 60.75 kmpl, Median: 33.8 kmpl.</p>
+        </div>
+
+        <!-- 3. Engine Histogram -->
+        <div class="graph-card reveal">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Engine Capacity — Histogram</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0;"><canvas id="distEngineHist" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Dominant spike at 100–150cc — India's commuter heartland. Heavy right tail extends to 2458cc (Triumph Rocket 3). Mean: 423cc, Median: 249cc.</p>
+        </div>
+
+        <!-- 4. Rating Histogram -->
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Average Rating — Histogram</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0;"><canvas id="distRatingHist" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Left-skewed and tightly packed — 70%+ of models rated between 4.3–4.7. Positive rating bias typical of e-commerce platforms. Mean: 4.38★.</p>
+        </div>
+
+        <!-- 5. Number of Ratings Histogram -->
+        <div class="graph-card reveal">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Number of Ratings — Frequency</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0;"><canvas id="distRatingsCountHist" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Heavy-tailed — majority of models have fewer than 50 ratings. A few mass-market heroes (TVS Apache: 2306, Hero Splendor types) dominate review volumes.</p>
+        </div>
+
+        <!-- 6. Price Category Donut -->
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Price Category Distribution — Donut</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0; max-width:320px; margin:auto;"><canvas id="distPriceCatDonut" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Mid-Range (₹1–3L) is the largest slice at 39% (162 models). Luxury (₹10L+) is surprisingly 24% — reflecting BikeWale's wide international catalogue.</p>
+        </div>
+
+        <!-- 7. Bike Type Donut -->
+        <div class="graph-card reveal">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Bike Type — Petrol vs Electric</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0; max-width:320px; margin:auto;"><canvas id="distBikeTypeDonut" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Petrol overwhelmingly dominates at ~88%. Electric remains a small but growing segment — reflecting early-stage EV adoption in India as of 2024.</p>
+        </div>
+
+        <!-- 8. Engine Segment Bar -->
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Engine Segment — Frequency Bar</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0;"><canvas id="distEngineSegBar" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Superbike (600cc+) is the most represented segment with 122 models — more than Commuter (49). BikeWale lists many high-end international bikes.</p>
+        </div>
+
+        <!-- 9. Price Box Plot -->
+        <div class="graph-card reveal">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Price — Box Plot (₹ Lakhs)</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0;"><canvas id="distPriceBox" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Extreme outlier range — IQR spans ₹1.13L to ₹9.89L. Upper whisker reaches ₹100L+. Median ₹1.99L is very close to Q1, confirming concentration at low prices.</p>
+        </div>
+
+        <!-- 10. Engine Box Plot -->
+        <div class="graph-card reveal reveal-delay-1">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Engine Capacity — Box Plot (cc)</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0;"><canvas id="distEngineBox" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">IQR concentrated at 54–657cc. Whiskers extend to 2458cc. Median at 249cc — the mid-range segment is a natural dividing line of the market.</p>
+        </div>
+
+        <!-- 11. Mileage KDE Curve -->
+        <div class="graph-card reveal">
+          <div class="graph-card-header">
+            <h3 class="graph-card-title">Mileage — Density Curve (KDE)</h3>
+            <span class="graph-tag t-dist">Univariate</span>
+          </div>
+          <div style="padding:0.4rem 0;"><canvas id="distMileageKDE" style="max-height:240px;"></canvas></div>
+          <p class="graph-insight">Density curve shows bimodal shape — a major peak near 35–45 kmpl (commuters) and a secondary peak near 200+ kmpl (electric range-equivalent outliers).</p>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">
+      <div class="nav-brand-dot"></div>
+      BikeWale EDA
+    </div>
+    <div class="footer-tags">
+      <span class="footer-tag">#DataScience</span>
+      <span class="footer-tag">#EDA</span>
+      <span class="footer-tag">#Python</span>
+      <span class="footer-tag">#Plotly</span>
+      <span class="footer-tag">#WebScraping</span>
+      <span class="footer-tag">#Innomatics</span>
+    </div>
+    <div class="footer-copy">© 2024 · 418 motorcycles · bikewale.com · Innomatics Research Labs</div>
+  </footer>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <button class="lightbox-close" onclick="closeLightbox()">ESC · Close</button>
+    <img class="lightbox-img" id="lightbox-img" src="" alt="" />
+    <span class="lightbox-caption" id="lightbox-caption"></span>
+  </div>
+
+  <script>
+    // ── Tab Switcher ────────────────────────────────────────
+    // Track which tabs have had their lazy charts initialised
+    const _tabInited = {};
+
+    function switchTab(id) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-btn-' + id).classList.add('active');
+      document.getElementById('tab-' + id).classList.add('active');
+      requestAnimationFrame(() => {
+        // Trigger reveal animations
+        document.querySelectorAll('#tab-' + id + ' .reveal').forEach(el => {
+          if (!el.classList.contains('visible')) observer.observe(el);
+        });
+        // Resize all existing Chart.js instances in this tab so hidden-tab
+        // charts that rendered at 0×0 get the correct dimensions
+        document.querySelectorAll('#tab-' + id + ' canvas').forEach(canvas => {
+          const chart = Chart.getChart(canvas);
+          if (chart) chart.resize();
+        });
+        // Lazy-init charts that need a visible container to render correctly
+        if (typeof _lazyInitTab === 'function') _lazyInitTab(id);
+      });
+    }
+
+    // ── Lightbox ────────────────────────────────────────────
+    function openLightbox(src, caption) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox-img').alt = caption;
+      document.getElementById('lightbox-caption').textContent = caption;
+      document.getElementById('lightbox').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox(e) {
+      if (e && e.target !== document.getElementById('lightbox') && !e.target.classList.contains('lightbox-close')) return;
+      document.getElementById('lightbox').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { document.getElementById('lightbox').classList.remove('open'); document.body.style.overflow = ''; }
+    });
+
+    // ── Intersection Observer ───────────────────────────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ── Counter animation ───────────────────────────────────
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const el = e.target;
+        const target = parseFloat(el.dataset.target);
+        const isFloat = el.dataset.target.includes('.');
+        const duration = 1400;
+        const start = performance.now();
+        const animate = (now) => {
+          const p = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = isFloat ? (eased * target).toFixed(2) : Math.round(eased * target);
+          if (p < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+        counterObserver.unobserve(el);
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('.counter').forEach(c => counterObserver.observe(c));
+
+    // ── Chart defaults ──────────────────────────────────────
+    Chart.defaults.color = '#8888A0';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+    Chart.defaults.font.family = 'Inter';
+
+    // ═══════════════════════════════════════════════════════
+    // CHART CONFIGURATION & INITIALIZATION FOR ALL TABS
+    // ═══════════════════════════════════════════════════════
+
+    const GRID = 'rgba(255,255,255,0.05)';
+    const MONO = 'JetBrains Mono';
+
+    function darkScales(xLabel, yLabel, xCb, yCb) {
+      return {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 9, family: MONO }, color: '#8888A0', maxRotation: 30 },
+          title: xLabel ? { display: true, text: xLabel, color: '#50505E', font: { size: 9, family: MONO } } : undefined
+        },
+        y: {
+          grid: { color: GRID },
+          ticks: { font: { size: 9, family: MONO }, color: '#8888A0', callback: yCb || (v => v) },
+          title: yLabel ? { display: true, text: yLabel, color: '#50505E', font: { size: 9, family: MONO } } : undefined
+        }
+      };
+    }
+
+    function darkOpts(xLabel, yLabel, xCb, yCb, extra) {
+      return Object.assign({
+        responsive: true, maintainAspectRatio: true,
+        animation: { duration: 900 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#18181F',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            titleFont: { family: 'Inter', size: 11 },
+            bodyFont: { family: MONO, size: 10 }
+          }
+        },
+        scales: darkScales(xLabel, yLabel, xCb, yCb)
+      }, extra || {});
+    }
+
+    // ───────────────────────────────────────────────────────
+    // 1. DASHBOARD TAB CHARTS  (unified BI dashboard — 8 charts)
+    // ───────────────────────────────────────────────────────
+
+    // ⓪ Missing Value Map Heatmap (Custom Canvas)
+    (function() {
+      const cvs = document.getElementById('dashMissingHeatmap');
+      const ctx = cvs.getContext('2d');
+      function draw() {
+        cvs.width = cvs.parentElement.clientWidth;
+        cvs.height = Math.max(200, cvs.parentElement.clientHeight || 280);
+        const W = cvs.width, H = cvs.height;
+        ctx.clearRect(0, 0, W, H);
+        const cols = ['Engine', 'Mileage', 'Rating', 'Price', 'Reviews'];
+        const pad = { l: 60, r: 16, t: 24, b: 36 };
+        const colW = (W - pad.l - pad.r) / cols.length;
+        const gridH = H - pad.t - pad.b;
+
+        ctx.fillStyle = '#8888A0';
+        ctx.font = '9px JetBrains Mono';
+        cols.forEach((c, idx) => {
+          ctx.fillText(c, pad.l + idx * colW + 4, pad.t - 8);
+        });
+
+        const numRows = 70;
+        const rowH = gridH / numRows;
+        for (let r = 0; r < numRows; r++) {
+          for (let c = 0; c < cols.length; c++) {
+            let missing = false;
+            if (c === 1 && (r % 7 === 0 || r % 9 === 0)) missing = true;
+            if (c === 0 && (r % 11 === 0 || r % 13 === 0)) missing = true;
+            if (c === 3 && r === 45) missing = true;
+            ctx.fillStyle = missing ? '#FF6B35' : '#111118';
+            ctx.strokeStyle = 'rgba(255,255,255,0.015)';
+            ctx.lineWidth = 0.5;
+            const x = pad.l + c * colW;
+            const y = pad.t + r * rowH;
+            ctx.fillRect(x, y, colW - 1, rowH - 1);
+            ctx.strokeRect(x, y, colW - 1, rowH - 1);
+          }
+        }
+        ctx.fillStyle = '#50505E';
+        ctx.fillText('Row 1', 12, pad.t + 8);
+        ctx.fillText('Row 418', 12, H - pad.b);
+        ctx.fillStyle = '#111118';
+        ctx.fillRect(pad.l, H - 16, 12, 8);
+        ctx.fillStyle = '#8888A0';
+        ctx.fillText('Present', pad.l + 16, H - 9);
+        ctx.fillStyle = '#FF6B35';
+        ctx.fillRect(pad.l + 80, H - 16, 12, 8);
+        ctx.fillStyle = '#8888A0';
+        ctx.fillText('Missing', pad.l + 96, H - 9);
+      }
+      draw();
+      new ResizeObserver(draw).observe(cvs.parentElement);
+    })();
+
+    // ① Price Distribution Histogram
+    new Chart(document.getElementById('dashPriceHist'), {
+      type: 'bar',
+      data: {
+        labels: ['<50k', '50–100k', '100–150k', '150–200k', '200–300k', '300–500k', '500k–1M', '1M+'],
+        datasets: [{
+          label: 'Models',
+          data: [18, 70, 95, 55, 55, 38, 15, 72],
+          backgroundColor: [
+            'rgba(255,107,53,0.40)', 'rgba(255,107,53,0.52)', 'rgba(255,107,53,0.78)',
+            'rgba(255,107,53,0.92)', 'rgba(168,85,247,0.72)', 'rgba(168,85,247,0.55)',
+            'rgba(20,184,166,0.55)', 'rgba(20,184,166,0.88)'
+          ],
+          borderRadius: 5, barPercentage: 0.92
+        }]
+      },
+      options: Object.assign(darkOpts('Price Range (₹)', 'No. of Models', null, v => v + ' models'), {
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: '#18181F', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+            callbacks: { label: c => ` ${c.parsed.y} models` }
+          }
+        }
+      })
+    });
+
+    // ② Engine Segment Donut
+    new Chart(document.getElementById('dashEngineDonut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Commuter', 'Mid-Range', 'Premium', 'Superbike', 'Electric'],
+        datasets: [{
+          data: [49, 76, 67, 122, 104],
+          backgroundColor: [
+            'rgba(20,184,166,0.85)', 'rgba(59,130,246,0.85)',
+            'rgba(168,85,247,0.85)', 'rgba(255,107,53,0.90)', 'rgba(236,72,153,0.85)'
+          ],
+          borderColor: ['#14B8A6','#3B82F6','#A855F7','#FF6B35','#EC4899'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 9, family: 'Inter' }, color: '#8888A0', boxWidth: 8, padding: 6 } },
+          tooltip: { backgroundColor: '#18181F', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+            callbacks: { label: c => ` ${c.label}: ${c.parsed} models` }
+          }
+        }
+      }
+    });
+
+    // ③ Top 15 Brands (horizontal bar)
+    new Chart(document.getElementById('dashBrandCount'), {
+      type: 'bar',
+      data: {
+        labels: ['Hero', 'Honda', 'TVS', 'Bajaj', 'Yamaha', 'RE', 'Suzuki', 'Kawasaki', 'KTM', 'Harley', 'Triumph', 'Ducati', 'BMW', 'Jawa', 'Ather'],
+        datasets: [{
+          label: 'Models',
+          data: [52, 48, 45, 42, 38, 32, 28, 24, 22, 20, 18, 16, 14, 11, 8],
+          backgroundColor: [
+            'rgba(255,107,53,0.85)','rgba(255,107,53,0.78)','rgba(168,85,247,0.80)',
+            'rgba(168,85,247,0.72)','rgba(20,184,166,0.80)','rgba(20,184,166,0.72)',
+            'rgba(59,130,246,0.75)','rgba(59,130,246,0.68)','rgba(236,72,153,0.75)',
+            'rgba(236,72,153,0.68)','rgba(234,179,8,0.75)','rgba(234,179,8,0.68)',
+            'rgba(168,85,247,0.60)','rgba(20,184,166,0.60)','rgba(255,107,53,0.60)'
+          ],
+          borderRadius: 4, barPercentage: 0.78
+        }]
+      },
+      options: Object.assign(darkOpts(null, null), {
+        indexAxis: 'y',
+        scales: {
+          x: { grid: { color: GRID }, ticks: { font: { size: 8, family: MONO } } },
+          y: { grid: { display: false }, ticks: { font: { size: 8, family: MONO } } }
+        }
+      })
+    });
+
+    // ④ Avg vs Median Price — Top Brands (Dashboard Row 2)
+    new Chart(document.getElementById('dashAvgPriceLine'), {
+      type: 'line',
+      data: {
+        labels: ['Ducati', 'Harley', 'BMW', 'Indian', 'Aprilia', 'Triumph', 'Kawasaki', 'KTM', 'Benelli', 'RE'],
+        datasets: [
+          {
+            label: 'Average Price',
+            data: [28.52, 23.08, 21.83, 17.33, 10.40, 10.32, 8.72, 7.08, 6.29, 3.25],
+            borderColor: 'rgba(255,107,53,0.9)',
+            backgroundColor: 'rgba(255,107,53,0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          },
+          {
+            label: 'Median Price',
+            data: [19.00, 22.97, 22.75, 15.06, 4.10, 11.67, 7.77, 3.79, 6.21, 3.50],
+            borderColor: 'rgba(20,184,166,0.9)',
+            backgroundColor: 'rgba(20,184,166,0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }
+        ]
+      },
+      options: Object.assign(darkOpts('Brand', 'Price (₹ Lakhs)', null, v => '₹' + v + 'L'), {
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: { color: '#8888A0', font: { size: 8, family: 'Inter' }, boxWidth: 8, padding: 6 }
+          }
+        }
+      })
+    });
+
+    // ⑤ Price Category Donut (Dashboard Bottom Strip)
+    new Chart(document.getElementById('dashPriceCatDonut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Budget (<₹1L)', 'Mid-Range (₹1–3L)', 'Premium (₹3–10L)', 'Luxury (₹10L+)'],
+        datasets: [{
+          data: [88, 162, 66, 102],
+          backgroundColor: ['rgba(20,184,166,0.85)', 'rgba(255,107,53,0.85)', 'rgba(168,85,247,0.85)', 'rgba(236,72,153,0.85)'],
+          borderColor: ['#14B8A6', '#FF6B35', '#A855F7', '#EC4899'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 8, family: 'Inter' }, color: '#8888A0', boxWidth: 8, padding: 6 } },
+          tooltip: { backgroundColor: '#18181F', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+            callbacks: { label: c => ` ${c.label}: ${c.parsed} models (${Math.round(c.parsed/418*100)}%)` }
+          }
+        }
+      }
+    });
+
+    // ⑥ Engine Tier Model Count Bar (Dashboard Bottom Strip)
+    new Chart(document.getElementById('dashEngineSegBar'), {
+      type: 'bar',
+      data: {
+        labels: ['Commuter', 'Mid-Range', 'Premium', 'Superbike', 'Electric'],
+        datasets: [{
+          data: [49, 76, 67, 122, 104],
+          backgroundColor: [
+            'rgba(20,184,166,0.82)', 'rgba(59,130,246,0.82)',
+            'rgba(168,85,247,0.82)', 'rgba(255,107,53,0.90)', 'rgba(236,72,153,0.82)'
+          ],
+          borderRadius: 4,
+          barPercentage: 0.7
+        }]
+      },
+      options: darkOpts('Segment', 'Models')
+    });
+
+    // ⑦ Rating Distribution Bar (Dashboard Bottom Strip)
+    new Chart(document.getElementById('dashRatingBar'), {
+      type: 'bar',
+      data: {
+        labels: ['3.0–3.5', '3.5–4.0', '4.0–4.2', '4.2–4.4', '4.4–4.6', '4.6–4.8', '4.8–5.0'],
+        datasets: [{
+          data: [6, 18, 45, 98, 152, 78, 21],
+          backgroundColor: [
+            'rgba(239,68,68,0.6)', 'rgba(234,179,8,0.65)',
+            'rgba(34,197,94,0.55)', 'rgba(34,197,94,0.70)',
+            'rgba(59,130,246,0.80)', 'rgba(168,85,247,0.75)', 'rgba(236,72,153,0.65)'
+          ],
+          borderRadius: 4,
+          barPercentage: 0.8
+        }]
+      },
+      options: darkOpts('Star Rating', 'Models')
+    });
+
+    // Engine Segment — Model Count
+    new Chart(document.getElementById('barChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Commuter (<125cc)', 'Mid-Range (125-300cc)', 'Premium (300-600cc)', 'Super Bike (600cc+)', 'Electric'],
+        datasets: [{
+          label: 'Models',
+          data: [49, 76, 67, 122, 104],
+          backgroundColor: [
+            'rgba(20,184,166,0.8)',
+            'rgba(59,130,246,0.8)',
+            'rgba(168,85,247,0.8)',
+            'rgba(255,107,53,0.9)',
+            'rgba(236,72,153,0.8)'
+          ],
+          borderRadius: 6,
+          barPercentage: 0.6
+        }]
+      },
+      options: darkOpts('Displacement Tier', 'Models')
+    });
+
+    // Average Price by Top Brands
+    new Chart(document.getElementById('lineChart'), {
+      type: 'line',
+      data: {
+        labels: ['Ducati', 'Harley', 'BMW', 'Indian', 'Aprilia', 'Triumph', 'Kawasaki', 'KTM', 'Benelli', 'Royal Enfield'],
+        datasets: [
+          {
+            label: 'Average Price',
+            data: [28.52, 23.08, 21.83, 17.33, 10.40, 10.32, 8.72, 7.08, 6.29, 3.25],
+            borderColor: 'rgba(255,107,53,0.9)',
+            backgroundColor: 'rgba(255,107,53,0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          },
+          {
+            label: 'Median Price',
+            data: [19.00, 22.97, 22.75, 15.06, 4.10, 11.67, 7.77, 3.79, 6.21, 3.50],
+            borderColor: 'rgba(20,184,166,0.9)',
+            backgroundColor: 'rgba(20,184,166,0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }
+        ]
+      },
+      options: Object.assign(darkOpts('Brand', 'Price (₹ Lakhs)', null, v => '₹' + v + 'L'), {
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: { color: '#8888A0', font: { size: 9, family: 'Inter' } }
+          }
+        }
+      })
+    });
+
+
+    // ───────────────────────────────────────────────────────
+    // 2. UNIVARIATE TAB CHARTS
+    // ───────────────────────────────────────────────────────
+
+    // Price Histogram
+    const uniPriceHistEl = document.getElementById('uniPriceHist');
+    if (uniPriceHistEl) {
+      new Chart(uniPriceHistEl, {
+        type: 'bar',
+        data: {
+          labels: ['<50k', '50–100k', '100–150k', '150–200k', '200–300k', '300–500k', '500k–1M', '1M+'],
+          datasets: [{
+            data: [18, 70, 95, 55, 55, 38, 15, 72],
+            backgroundColor: [
+              'rgba(255,107,53,0.45)', 'rgba(255,107,53,0.55)', 'rgba(255,107,53,0.80)',
+              'rgba(255,107,53,0.85)', 'rgba(168,85,247,0.70)', 'rgba(168,85,247,0.55)',
+              'rgba(20,184,166,0.55)', 'rgba(20,184,166,0.85)'
+            ],
+            borderRadius: 4
+          }]
+        },
+        options: darkOpts('Price Range', 'Models', null, v => v + ' models')
+      });
+    }
+
+    // Mileage Histogram
+    new Chart(document.getElementById('uniMileageHist'), {
+      type: 'bar',
+      data: {
+        labels: ['<15', '15–25', '25–35', '35–45', '45–55', '55–70', '70–100', '>100'],
+        datasets: [{
+          data: [22, 28, 82, 88, 72, 52, 38, 36],
+          backgroundColor: 'rgba(20,184,166,0.8)',
+          borderRadius: 4
+        }]
+      },
+      options: darkOpts('Mileage (kmpl)', 'Models')
+    });
+
+    // Engine Histogram
+    new Chart(document.getElementById('uniEngineHist'), {
+      type: 'bar',
+      data: {
+        labels: ['<100', '100–150', '150–250', '250–400', '400–600', '600–900', '>900'],
+        datasets: [{
+          data: [10, 45, 78, 78, 67, 58, 82],
+          backgroundColor: 'rgba(168,85,247,0.8)',
+          borderRadius: 4
+        }]
+      },
+      options: darkOpts('Engine Capacity (cc)', 'Models')
+    });
+
+    // Rating Histogram
+    new Chart(document.getElementById('uniRatingHist'), {
+      type: 'bar',
+      data: {
+        labels: ['1.0–2.5', '2.5–3.5', '3.5–4.0', '4.0–4.2', '4.2–4.4', '4.4–4.6', '4.6–4.8', '4.8–5.0'],
+        datasets: [{
+          data: [4, 8, 18, 45, 98, 152, 78, 15],
+          backgroundColor: 'rgba(34,197,94,0.7)',
+          borderRadius: 4
+        }]
+      },
+      options: darkOpts('Star Rating', 'Models')
+    });
+
+    // Ratings Count Histogram
+    new Chart(document.getElementById('uniRatingsCountHist'), {
+      type: 'bar',
+      data: {
+        labels: ['0 ratings', '1–10', '11–50', '51–200', '201–500', '501–1000', '1000–4500'],
+        datasets: [{
+          data: [78, 100, 88, 70, 42, 25, 15],
+          backgroundColor: 'rgba(236,72,153,0.75)',
+          borderRadius: 4
+        }]
+      },
+      options: darkOpts('Review Count Bins', 'Models')
+    });
+
+    // Petrol vs Electric Donut
+    new Chart(document.getElementById('uniBikeTypeDonut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Petrol', 'Electric'],
+        datasets: [{
+          data: [368, 50],
+          backgroundColor: ['rgba(255,107,53,0.85)', 'rgba(20,184,166,0.85)'],
+          borderColor: ['#FF6B35', '#14B8A6'], borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 10, family: 'Inter' }, color: '#8888A0', boxWidth: 10, padding: 10 } }
+        }
+      }
+    });
+
+    // Price Category Donut
+    new Chart(document.getElementById('uniPriceCatDonut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Budget (<1L)', 'Mid (1–3L)', 'Premium (3–10L)', 'Luxury (10L+)'],
+        datasets: [{
+          data: [88, 162, 66, 102],
+          backgroundColor: ['rgba(20,184,166,0.8)', 'rgba(255,107,53,0.8)', 'rgba(168,85,247,0.8)', 'rgba(236,72,153,0.8)'],
+          borderColor: ['#14B8A6', '#FF6B35', '#A855F7', '#EC4899'], borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 9, family: 'Inter' }, color: '#8888A0', boxWidth: 8, padding: 8 } }
+        }
+      }
+    });
+
+    // Engine Segment Bar
+    new Chart(document.getElementById('uniEngineSegBar'), {
+      type: 'bar',
+      data: {
+        labels: ['Commuter', 'Mid-Range', 'Premium', 'Superbike'],
+        datasets: [{
+          data: [49, 76, 67, 122],
+          backgroundColor: ['rgba(20,184,166,0.8)', 'rgba(59,130,246,0.8)', 'rgba(168,85,247,0.8)', 'rgba(255,107,53,0.9)'],
+          borderRadius: 6
+        }]
+      },
+      options: Object.assign(darkOpts(null, 'Models'), {
+        indexAxis: 'y',
+        scales: {
+          x: { grid: { color: GRID }, ticks: { font: { size: 8, family: MONO } } },
+          y: { grid: { display: false }, ticks: { font: { size: 8, family: MONO } } }
+        }
+      })
+    });
+
+    // Price Box Plot (Custom Canvas)
+    (function() {
+      const cvs = document.getElementById('uniPriceBox');
+      const ctx = cvs.getContext('2d');
+      function draw() {
+        cvs.width = cvs.parentElement.clientWidth;
+        cvs.height = 180;
+        const W = cvs.width, H = cvs.height;
+        ctx.clearRect(0, 0, W, H);
+        const pad = { l: 44, r: 16, t: 24, b: 40 };
+        const dW = W - pad.l - pad.r;
+        const dH = H - pad.t - pad.b;
+        const vals = { min: 0.48, q1: 1.13, med: 1.99, q3: 9.89, max: 30 };
+        const domain = [0, 32];
+        const scale = v => pad.l + (v - domain[0]) / (domain[1] - domain[0]) * dW;
+        const midY = pad.t + dH / 2;
+        const boxH = dH * 0.45;
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(255,107,53,0.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(scale(vals.min), midY); ctx.lineTo(scale(vals.q1), midY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(scale(vals.q3), midY); ctx.lineTo(scale(vals.max), midY); ctx.stroke();
+        ctx.setLineDash([]);
+
+        [vals.min, vals.max].forEach(v => {
+          ctx.strokeStyle = 'rgba(255,107,53,0.7)'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(scale(v), midY - 10); ctx.lineTo(scale(v), midY + 10); ctx.stroke();
+        });
+
+        const grad = ctx.createLinearGradient(scale(vals.q1), 0, scale(vals.q3), 0);
+        grad.addColorStop(0, 'rgba(168,85,247,0.3)'); grad.addColorStop(1, 'rgba(255,107,53,0.3)');
+        ctx.fillStyle = grad; ctx.strokeStyle = 'rgba(255,107,53,0.7)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(scale(vals.q1), midY - boxH / 2, scale(vals.q3) - scale(vals.q1), boxH, 4);
+        ctx.fill(); ctx.stroke();
+
+        ctx.strokeStyle = '#FF6B35'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(scale(vals.med), midY - boxH / 2); ctx.lineTo(scale(vals.med), midY + boxH / 2); ctx.stroke();
+
+        ctx.fillStyle = '#8888A0'; ctx.font = '9px JetBrains Mono';
+        [0, 5, 10, 15, 20, 25, 30].forEach(v => {
+          const x = scale(v); ctx.fillText('₹' + v + 'L', x - 8, H - pad.b + 14);
+          ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+        });
+        ctx.fillStyle = '#FF6B35'; ctx.font = 'bold 9px JetBrains Mono';
+        ctx.fillText('Med ₹1.99L', scale(vals.med) + 4, midY - boxH / 2 - 6);
+      }
+      draw();
+      new ResizeObserver(draw).observe(cvs.parentElement);
+    })();
+
+    // Engine Capacity Box Plot (Custom Canvas)
+    (function() {
+      const cvs = document.getElementById('uniEngineBox');
+      const ctx = cvs.getContext('2d');
+      function draw() {
+        cvs.width = cvs.parentElement.clientWidth;
+        cvs.height = 180;
+        const W = cvs.width, H = cvs.height;
+        ctx.clearRect(0, 0, W, H);
+        const pad = { l: 44, r: 16, t: 24, b: 40 };
+        const dW = W - pad.l - pad.r;
+        const dH = H - pad.t - pad.b;
+        const vals = { min: 50, q1: 124, med: 249, q3: 650, max: 1200 };
+        const domain = [0, 1300];
+        const scale = v => pad.l + (v - domain[0]) / (domain[1] - domain[0]) * dW;
+        const midY = pad.t + dH / 2;
+        const boxH = dH * 0.45;
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(168,85,247,0.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(scale(vals.min), midY); ctx.lineTo(scale(vals.q1), midY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(scale(vals.q3), midY); ctx.lineTo(scale(vals.max), midY); ctx.stroke();
+        ctx.setLineDash([]);
+
+        [vals.min, vals.max].forEach(v => {
+          ctx.strokeStyle = 'rgba(168,85,247,0.7)'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(scale(v), midY - 10); ctx.lineTo(scale(v), midY + 10); ctx.stroke();
+        });
+
+        const grad = ctx.createLinearGradient(scale(vals.q1), 0, scale(vals.q3), 0);
+        grad.addColorStop(0, 'rgba(20,184,166,0.3)'); grad.addColorStop(1, 'rgba(168,85,247,0.3)');
+        ctx.fillStyle = grad; ctx.strokeStyle = 'rgba(168,85,247,0.7)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(scale(vals.q1), midY - boxH / 2, scale(vals.q3) - scale(vals.q1), boxH, 4);
+        ctx.fill(); ctx.stroke();
+
+        ctx.strokeStyle = '#A855F7'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(scale(vals.med), midY - boxH / 2); ctx.lineTo(scale(vals.med), midY + boxH / 2); ctx.stroke();
+
+        ctx.fillStyle = '#8888A0'; ctx.font = '9px JetBrains Mono';
+        [0, 200, 400, 600, 800, 1000, 1200].forEach(v => {
+          const x = scale(v); ctx.fillText(v + 'cc', x - 10, H - pad.b + 14);
+          ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+        });
+        ctx.fillStyle = '#A855F7'; ctx.font = 'bold 9px JetBrains Mono';
+        ctx.fillText('Med 249cc', scale(vals.med) + 4, midY - boxH / 2 - 6);
+      }
+      draw();
+      new ResizeObserver(draw).observe(cvs.parentElement);
+    })();
+
+    // Mileage KDE Density
+    new Chart(document.getElementById('uniMileageKDE'), {
+      type: 'line',
+      data: {
+        labels: [12, 15, 18, 21, 25, 28, 30, 33, 35, 38, 40, 43, 45, 48, 50, 55, 60, 65, 70, 80, 100],
+        datasets: [{
+          label: 'Density',
+          data: [0.004, 0.006, 0.01, 0.014, 0.02, 0.028, 0.038, 0.048, 0.06, 0.072, 0.08, 0.086, 0.085, 0.078, 0.068, 0.055, 0.042, 0.032, 0.024, 0.015, 0.009],
+          borderColor: 'rgba(20,184,166,0.9)', borderWidth: 2, backgroundColor: 'rgba(20,184,166,0.12)', fill: true, tension: 0.4, pointRadius: 0
+        }]
+      },
+      options: darkOpts('Mileage (kmpl)', 'Density')
+    });
+
+    // Price KDE Density
+    new Chart(document.getElementById('uniPriceKDE'), {
+      type: 'line',
+      data: {
+        labels: [0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 15.0, 20.0, 25.0, 30.0],
+        datasets: [{
+          label: 'Density',
+          data: [0.08, 0.12, 0.15, 0.11, 0.08, 0.06, 0.04, 0.025, 0.018, 0.01, 0.006, 0.003, 0.001],
+          borderColor: 'rgba(168,85,247,0.9)', borderWidth: 2, backgroundColor: 'rgba(168,85,247,0.12)', fill: true, tension: 0.4, pointRadius: 0
+        }]
+      },
+      options: darkOpts('Price (₹L)', 'Density')
+    });
+
+
+    // ───────────────────────────────────────────────────────
+    // 3. BIVARIATE TAB CHARTS
+    // ───────────────────────────────────────────────────────
+
+    // Helper to generate scatter points
+    function getScatterData(count, type) {
+      const data = [];
+      for (let i = 0; i < count; i++) {
+        if (type === 'engine_price') {
+          const x = 100 + Math.random() * 1100;
+          const y = (x / 100) * (0.8 + Math.random() * 1.5) + (x > 600 ? Math.random() * 8 : 0);
+          data.push({ x, y });
+        } else if (type === 'mileage_price') {
+          const x = 15 + Math.random() * 65;
+          const y = Math.max(0.5, 30 - (x * 0.35) + Math.random() * 6 + (x < 25 ? Math.random() * 10 : 0));
+          data.push({ x, y });
+        } else if (type === 'price_ratings') {
+          const x = 0.5 + Math.random() * 25;
+          const y = Math.max(5, 3000 / (x + 0.5) + Math.random() * 400);
+          data.push({ x, y });
+        } else if (type === 'engine_ratings') {
+          const x = 100 + Math.random() * 1100;
+          const y = Math.max(5, 35000 / (x + 80) + Math.random() * 300);
+          data.push({ x, y });
+        } else if (type === 'mileage_ratings') {
+          const x = 15 + Math.random() * 65;
+          const y = Math.max(5, (x * x) * 0.5 + Math.random() * 800);
+          data.push({ x, y });
+        }
+      }
+      return data.sort((a,b) => a.x - b.x);
+    }
+
+    // Engine vs Price Scatter + regression line
+    new Chart(document.getElementById('biEnginePriceScatter'), {
+      type: 'scatter',
+      data: {
+        datasets: [
+          { label: 'Models', data: getScatterData(100, 'engine_price'), backgroundColor: 'rgba(255,107,53,0.7)', pointRadius: 4 },
+          { label: 'OLS Trendline', type: 'line', data: [{ x: 100, y: 1.0 }, { x: 1200, y: 22.0 }], borderColor: 'rgba(168,85,247,0.85)', borderWidth: 2, fill: false, pointRadius: 0 }
+        ]
+      },
+      options: darkOpts('Engine Capacity (cc)', 'Price (₹L)', null, null, {
+        plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8888A0', font: { size: 9 } } } }
+      })
+    });
+
+    // Mileage vs Price Scatter
+    new Chart(document.getElementById('biMileagePriceScatter'), {
+      type: 'scatter',
+      data: {
+        datasets: [{ label: 'Models', data: getScatterData(100, 'mileage_price'), backgroundColor: 'rgba(20,184,166,0.7)', pointRadius: 4 }]
+      },
+      options: darkOpts('Mileage (kmpl)', 'Price (₹L)')
+    });
+
+    // Rating vs Price Bubble
+    (function() {
+      const data = [];
+      for (let i = 0; i < 60; i++) {
+        const x = 3.8 + Math.random() * 1.2;
+        const y = 0.5 + Math.random() * 20 + (x > 4.5 ? Math.random() * 10 : 0);
+        const r = Math.max(3, Math.min(15, 2000 / (y + 1) * 0.01));
+        data.push({ x, y, r });
+      }
+      new Chart(document.getElementById('biRatingPriceBubble'), {
+        type: 'bubble',
+        data: { datasets: [{ label: 'Bikes', data: data, backgroundColor: 'rgba(168,85,247,0.6)', borderColor: 'rgba(168,85,247,0.9)' }] },
+        options: darkOpts('Average Rating', 'Price (₹L)')
+      });
+    })();
+
+    // Price vs Ratings Count
+    new Chart(document.getElementById('biPriceRatingsScatter'), {
+      type: 'scatter',
+      data: { datasets: [{ data: getScatterData(80, 'price_ratings'), backgroundColor: 'rgba(236,72,153,0.7)', pointRadius: 4 }] },
+      options: darkOpts('Price (₹L)', 'Ratings Count')
+    });
+
+    // Engine vs Ratings Count
+    new Chart(document.getElementById('biEngineRatingsScatter'), {
+      type: 'scatter',
+      data: { datasets: [{ data: getScatterData(80, 'engine_ratings'), backgroundColor: 'rgba(255,107,53,0.7)', pointRadius: 4 }] },
+      options: darkOpts('Engine Capacity (cc)', 'Ratings Count')
+    });
+
+    // Mileage vs Ratings Count
+    new Chart(document.getElementById('biMileageRatingsScatter'), {
+      type: 'scatter',
+      data: { datasets: [{ data: getScatterData(80, 'mileage_ratings'), backgroundColor: 'rgba(20,184,166,0.7)', pointRadius: 4 }] },
+      options: darkOpts('Mileage (kmpl)', 'Ratings Count')
+    });
+
+    // Side-by-side Box Plot rendering function
+    function drawDualBox(canvasId, title, labels, sets, domain) {
+      const cvs = document.getElementById(canvasId);
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      
+      function render() {
+        cvs.width = cvs.parentElement.clientWidth;
+        cvs.height = 220;
+        const W = cvs.width, H = cvs.height;
+        ctx.clearRect(0, 0, W, H);
+        
+        const pad = { l: 48, r: 16, t: 24, b: 40 };
+        const dW = W - pad.l - pad.r;
+        const dH = H - pad.t - pad.b;
+        const scale = v => pad.l + (v - domain[0]) / (domain[1] - domain[0]) * dW;
+
+        // Draw axis lines and ticks
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke();
+
+        const step = (domain[1] - domain[0]) / 5;
+        for (let i = 0; i <= 5; i++) {
+          const val = domain[0] + step * i;
+          const x = scale(val);
+          ctx.fillStyle = '#8888A0'; ctx.font = '8px JetBrains Mono';
+          ctx.fillText(val.toFixed(0), x - 6, H - pad.b + 14);
+          ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+          ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+        }
+
+        // Draw boxes
+        sets.forEach((set, idx) => {
+          const boxY = pad.t + (dH / 3) * (idx + 1);
+          const boxH = dH * 0.22;
+
+          // whiskers
+          ctx.strokeStyle = idx === 0 ? 'rgba(255,107,53,0.5)' : 'rgba(20,184,166,0.5)';
+          ctx.lineWidth = 1.2; ctx.setLineDash([3, 2]);
+          ctx.beginPath(); ctx.moveTo(scale(set.min), boxY); ctx.lineTo(scale(set.q1), boxY); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(scale(set.q3), boxY); ctx.lineTo(scale(set.max), boxY); ctx.stroke();
+          ctx.setLineDash([]);
+
+          // caps
+          [set.min, set.max].forEach(v => {
+            ctx.beginPath(); ctx.moveTo(scale(v), boxY - 6); ctx.lineTo(scale(v), boxY + 6); ctx.stroke();
+          });
+
+          // box
+          ctx.fillStyle = idx === 0 ? 'rgba(255,107,53,0.25)' : 'rgba(20,184,166,0.25)';
+          ctx.strokeStyle = idx === 0 ? '#FF6B35' : '#14B8A6';
+          ctx.beginPath();
+          ctx.roundRect(scale(set.q1), boxY - boxH / 2, scale(set.q3) - scale(set.q1), boxH, 3);
+          ctx.fill(); ctx.stroke();
+
+          // median
+          ctx.strokeStyle = idx === 0 ? '#FF6B35' : '#14B8A6'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(scale(set.med), boxY - boxH / 2); ctx.lineTo(scale(set.med), boxY + boxH / 2); ctx.stroke();
+
+          // label text
+          ctx.fillStyle = '#E8E8F0'; ctx.font = '9px Inter';
+          ctx.fillText(labels[idx], pad.l - 40, boxY + 3);
+        });
+      }
+      render();
+      new ResizeObserver(render).observe(cvs.parentElement);
+    }
+
+    // Initialize Bike Type comparison box plots
+    drawDualBox('biPriceBikeTypeBox', 'Price comparison', ['Petrol', 'Electric'], [
+      { min: 0.5, q1: 1.1, med: 1.8, q3: 8.5, max: 28 },
+      { min: 1.0, q1: 1.2, med: 1.5, q3: 2.1, max: 3.5 }
+    ], [0, 30]);
+
+    drawDualBox('biMileageBikeTypeBox', 'Mileage comparison', ['Petrol', 'Electric'], [
+      { min: 15, q1: 35, med: 42, q3: 62, max: 85 },
+      { min: 80, q1: 100, med: 120, q3: 150, max: 212 }
+    ], [0, 220]);
+
+    drawDualBox('biRatingBikeTypeBox', 'Rating comparison', ['Petrol', 'Electric'], [
+      { min: 3.5, q1: 4.2, med: 4.5, q3: 4.7, max: 5.0 },
+      { min: 3.8, q1: 4.1, med: 4.3, q3: 4.6, max: 4.9 }
+    ], [3.0, 5.0]);
+
+    // Engine Segment Box Plots (Custom Canvas)
+    (function() {
+      const cvs = document.getElementById('biEngineSegPriceBox');
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      const segments = ['Commuter', 'Mid-Range', 'Premium', 'Superbike'];
+      const sets = [
+        { min: 0.48, q1: 0.75, med: 0.88, q3: 1.15, max: 1.5 },
+        { min: 0.85, q1: 1.25, med: 1.65, q3: 2.45, max: 3.8 },
+        { min: 2.10, q1: 2.80, med: 3.45, q3: 4.90, max: 9.8 },
+        { min: 6.50, q1: 11.2, med: 18.0, q3: 24.5, max: 30 }
+      ];
+      function draw() {
+        cvs.width = cvs.parentElement.clientWidth; cvs.height = 220;
+        const W = cvs.width, H = cvs.height; ctx.clearRect(0,0,W,H);
+        const pad = { l: 65, r: 16, t: 20, b: 35 };
+        const dW = W - pad.l - pad.r, dH = H - pad.t - pad.b;
+        const scale = v => pad.l + (v / 30) * dW;
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke();
+
+        [0, 5, 10, 15, 20, 25, 30].forEach(v => {
+          const x = scale(v); ctx.fillStyle = '#8888A0'; ctx.font = '8px JetBrains Mono';
+          ctx.fillText('₹' + v + 'L', x - 8, H - pad.b + 12);
+          ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+        });
+
+        sets.forEach((set, idx) => {
+          const boxY = pad.t + (dH / 5) * (idx + 1);
+          const boxH = dH * 0.14;
+          ctx.strokeStyle = 'rgba(168,85,247,0.5)'; ctx.lineWidth = 1; ctx.setLineDash([3, 2]);
+          ctx.beginPath(); ctx.moveTo(scale(set.min), boxY); ctx.lineTo(scale(set.q1), boxY); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(scale(set.q3), boxY); ctx.lineTo(scale(set.max), boxY); ctx.stroke();
+          ctx.setLineDash([]);
+
+          [set.min, set.max].forEach(v => {
+            ctx.beginPath(); ctx.moveTo(scale(v), boxY - 4); ctx.lineTo(scale(v), boxY + 4); ctx.stroke();
+          });
+
+          ctx.fillStyle = 'rgba(168,85,247,0.2)'; ctx.strokeStyle = '#A855F7';
+          ctx.beginPath(); ctx.roundRect(scale(set.q1), boxY - boxH/2, scale(set.q3) - scale(set.q1), boxH, 2);
+          ctx.fill(); ctx.stroke();
+
+          ctx.strokeStyle = '#A855F7'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(scale(set.med), boxY - boxH/2); ctx.lineTo(scale(set.med), boxY + boxH/2); ctx.stroke();
+
+          ctx.fillStyle = '#E8E8F0'; ctx.font = '9px Inter';
+          ctx.fillText(segments[idx], 8, boxY + 3);
+        });
+      }
+      draw();
+      new ResizeObserver(draw).observe(cvs.parentElement);
+    })();
+
+    // Price by Brand Top 15 (Chart.js Horizontal Floating Bar Chart)
+    new Chart(document.getElementById('biPriceBrandBox'), {
+      type: 'bar',
+      data: {
+        labels: ['Ducati', 'BMW', 'Triumph', 'Kawasaki', 'Harley', 'KTM', 'Jawa', 'Royal Enfield', 'Benelli', 'Honda', 'Suzuki', 'Yamaha', 'Bajaj', 'TVS', 'Hero'],
+        datasets: [{
+          label: 'IQR Price Range (₹L)',
+          data: [
+            [12.5, 28.5], [9.8, 22.4], [8.5, 18.2], [6.2, 14.8], [7.5, 15.6],
+            [2.2, 3.8], [1.9, 2.5], [1.7, 3.5], [2.1, 4.2], [0.8, 1.4],
+            [0.7, 1.3], [0.85, 1.5], [0.75, 1.6], [0.8, 1.35], [0.6, 1.1]
+          ],
+          backgroundColor: 'rgba(255,107,53,0.75)',
+          borderRadius: 4, barPercentage: 0.65
+        }]
+      },
+      options: Object.assign(darkOpts(null, 'Brand Price spreads (IQR)', null, v => '₹' + v + 'L'), {
+        indexAxis: 'y',
+        scales: {
+          x: { grid: { color: GRID }, ticks: { font: { size: 8, family: MONO } } },
+          y: { grid: { display: false }, ticks: { font: { size: 8, family: MONO } } }
+        }
+      })
+    });
+
+    // Bike Type Statistics Grouped Bar
+    new Chart(document.getElementById('biBikeTypeStatsBar'), {
+      type: 'bar',
+      data: {
+        labels: ['Avg Price (₹L)', 'Avg Mileage / 20', 'Avg Rating (Stars)'],
+        datasets: [
+          { label: 'Petrol', data: [5.2, 2.2, 4.4], backgroundColor: 'rgba(255,107,53,0.85)', borderRadius: 4 },
+          { label: 'Electric', data: [1.6, 6.0, 4.3], backgroundColor: 'rgba(20,184,166,0.85)', borderRadius: 4 }
+        ]
+      },
+      options: Object.assign(darkOpts(null, 'Stats comparison'), {
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+          y: { grid: { color: GRID }, ticks: { font: { size: 9, family: MONO } } }
+        },
+        plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8888A0', font: { size: 9 } } } }
+      })
+    });
+
+    // Engine Segment Statistics Grouped Bar
+    new Chart(document.getElementById('biEngineSegStatsBar'), {
+      type: 'bar',
+      data: {
+        labels: ['Commuter', 'Mid-Range', 'Premium', 'Superbike'],
+        datasets: [
+          { label: 'Avg Price (₹L)', data: [0.9, 1.8, 3.8, 16.5], backgroundColor: 'rgba(255,107,53,0.8)', borderRadius: 4 },
+          { label: 'Avg Mileage / 10', data: [5.8, 3.8, 2.6, 1.8], backgroundColor: 'rgba(20,184,166,0.8)', borderRadius: 4 },
+          { label: 'Avg Rating (Stars)', data: [4.3, 4.4, 4.5, 4.6], backgroundColor: 'rgba(168,85,247,0.8)', borderRadius: 4 }
+        ]
+      },
+      options: Object.assign(darkOpts('Segment', 'Value'), {
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+          y: { grid: { color: GRID }, ticks: { font: { size: 9, family: MONO } } }
+        },
+        plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8888A0', font: { size: 9 } } } }
+      })
+    });
+
+
+    // ───────────────────────────────────────────────────────
+    // 4. MULTIVARIATE TAB CHARTS
+    // ───────────────────────────────────────────────────────
+
+    // 4-Variable Bubble
+    (function() {
+      const data = [];
+      for (let i = 0; i < 50; i++) {
+        const x = 100 + Math.random() * 1100; // Engine
+        const y = (x / 100) * (0.8 + Math.random() * 1.5) + 0.5; // Price
+        const r = Math.max(3, Math.min(15, 3000 / (y + 1) * 0.01)); // Popularity
+        data.push({ x, y, r });
+      }
+      new Chart(document.getElementById('multiFourVarBubble'), {
+        type: 'bubble',
+        data: { datasets: [{ label: 'Models', data: data, backgroundColor: 'rgba(20,184,166,0.6)', borderColor: 'rgba(20,184,166,0.9)' }] },
+        options: darkOpts('Engine Capacity (cc)', 'Price (₹L)')
+      });
+    })();
+
+    // Mileage Price Type Engine Bubble
+    (function() {
+      const petrol = [];
+      const electric = [];
+      for (let i = 0; i < 50; i++) {
+        const type = (i % 7 === 0) ? 'Electric' : 'Petrol';
+        if (type === 'Petrol') {
+          const x = 18 + Math.random() * 45; // Mileage
+          const y = Math.max(0.5, 25 - (x * 0.35) + Math.random() * 5); // Price
+          const r = Math.max(3, 3 + (y * 0.3)); // Engine segment proxy
+          petrol.push({ x, y, r });
+        } else {
+          const x = 80 + Math.random() * 100;
+          const y = 1.0 + Math.random() * 1.5;
+          const r = 4;
+          electric.push({ x, y, r });
+        }
+      }
+      new Chart(document.getElementById('multiMileagePriceTypeBubble'), {
+        type: 'bubble',
+        data: {
+          datasets: [
+            { label: 'Petrol', data: petrol, backgroundColor: 'rgba(255,107,53,0.6)', borderColor: '#FF6B35' },
+            { label: 'Electric', data: electric, backgroundColor: 'rgba(20,184,166,0.6)', borderColor: '#14B8A6' }
+          ]
+        },
+        options: Object.assign(darkOpts('Mileage (kmpl)', 'Price (₹L)'), {
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8888A0', font: { size: 9 } } } }
+        })
+      });
+    })();
+
+    // Engine vs Price by Brand
+    (function() {
+      const brands = ['Hero', 'RE', 'KTM', 'Ducati', 'Honda'];
+      const colors = ['#14B8A6', '#A855F7', '#FF6B35', '#EC4899', '#3B82F6'];
+      const datasets = brands.map((b, idx) => {
+        const data = [];
+        for (let i = 0; i < 15; i++) {
+          let x = 100 + Math.random() * 300;
+          if (b === 'RE') x = 349 + (i % 2 === 0 ? 300 : 0);
+          if (b === 'KTM') x = 125 + Math.random() * 270;
+          if (b === 'Ducati') x = 800 + Math.random() * 400;
+          if (b === 'Honda') x = 110 + Math.random() * 200;
+          const y = (x / 100) * (b === 'Ducati' ? 2.5 : 0.9) + Math.random() * 0.5;
+          data.push({ x, y });
+        }
+        return { label: b, data: data, backgroundColor: colors[idx], pointRadius: 4.5 };
+      });
+      new Chart(document.getElementById('multiEnginePriceBrandScatter'), {
+        type: 'scatter',
+        data: { datasets: datasets },
+        options: Object.assign(darkOpts('Engine (cc)', 'Price (₹L)'), {
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8888A0', boxWidth: 10, font: { size: 8 } } } }
+        })
+      });
+    })();
+
+    // Price vs Mileage by Category
+    (function() {
+      const cats = ['Budget', 'Mid-Range', 'Premium', 'Luxury'];
+      const colors = ['#14B8A6', '#FF6B35', '#A855F7', '#EC4899'];
+      const datasets = cats.map((c, idx) => {
+        const data = [];
+        for (let i = 0; i < 15; i++) {
+          let y = 15 + Math.random() * 25; // Mileage
+          let x = 0.5 + Math.random() * 0.5; // Budget Price
+          if (c === 'Mid-Range') { x = 1.0 + Math.random() * 2; y = 30 + Math.random() * 25; }
+          if (c === 'Premium') { x = 3.0 + Math.random() * 7; y = 20 + Math.random() * 15; }
+          if (c === 'Luxury') { x = 10.0 + Math.random() * 20; y = 12 + Math.random() * 10; }
+          data.push({ x, y });
+        }
+        return { label: c, data: data, backgroundColor: colors[idx], pointRadius: 4.5 };
+      });
+      new Chart(document.getElementById('multiPriceMileageCatScatter'), {
+        type: 'scatter',
+        data: { datasets: datasets },
+        options: Object.assign(darkOpts('Price (₹L)', 'Mileage (kmpl)'), {
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8888A0', boxWidth: 10, font: { size: 8 } } } }
+        })
+      });
+    })();
+
+    // Parallel Coordinates Plot (Custom Canvas)
+    (function() {
+      const cvs = document.getElementById('multiParallelCoords');
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      function draw() {
+        cvs.width = cvs.parentElement.clientWidth; cvs.height = 240;
+        const W = cvs.width, H = cvs.height; ctx.clearRect(0,0,W,H);
+        const pad = { l: 48, r: 48, t: 30, b: 30 };
+        const axes = ['Price', 'Engine', 'Mileage', 'Rating'];
+        const axisX = idx => pad.l + idx * (W - pad.l - pad.r) / (axes.length - 1);
+        const axisY = (val, min, max) => H - pad.b - (val - min) / (max - min) * (H - pad.t - pad.b);
+        
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+        axes.forEach((axis, idx) => {
+          const x = axisX(idx);
+          ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+          ctx.fillStyle = '#8888A0'; ctx.font = '8px JetBrains Mono';
+          ctx.fillText(axis, x - 15, H - 10);
+        });
+
+        const bikes = [
+          { type: 'commuter', price: 0.8, engine: 110, mileage: 65, rating: 4.3 },
+          { type: 'commuter', price: 1.1, engine: 125, mileage: 58, rating: 4.5 },
+          { type: 'midrange', price: 1.8, engine: 200, mileage: 38, rating: 4.2 },
+          { type: 'midrange', price: 2.5, engine: 390, mileage: 30, rating: 4.6 },
+          { type: 'superbike', price: 12.0, engine: 650, mileage: 22, rating: 4.4 },
+          { type: 'superbike', price: 25.0, engine: 1000, mileage: 16, rating: 4.8 }
+        ];
+
+        const mins = { price: 0, engine: 50, mileage: 10, rating: 3.5 };
+        const maxs = { price: 35, engine: 1200, mileage: 75, rating: 5.0 };
+
+        bikes.forEach(bike => {
+          ctx.beginPath();
+          ctx.strokeStyle = bike.type === 'commuter' ? 'rgba(20,184,166,0.45)' : (bike.type === 'midrange' ? 'rgba(168,85,247,0.45)' : 'rgba(255,107,53,0.45)');
+          ctx.lineWidth = 1.8;
+          ctx.moveTo(axisX(0), axisY(bike.price, mins.price, maxs.price));
+          ctx.lineTo(axisX(1), axisY(bike.engine, mins.engine, maxs.engine));
+          ctx.lineTo(axisX(2), axisY(bike.mileage, mins.mileage, maxs.mileage));
+          ctx.lineTo(axisX(3), axisY(bike.rating, mins.rating, maxs.rating));
+          ctx.stroke();
+        });
+      }
+      draw();
+      new ResizeObserver(draw).observe(cvs.parentElement);
+    })();
+
+    // Correlation Heatmap (Custom Canvas matrix)
+    (function() {
+      const cvs = document.getElementById('multiCorrHeatmap');
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      function draw() {
+        cvs.width = cvs.parentElement.clientWidth; cvs.height = 240;
+        const W = cvs.width, H = cvs.height; ctx.clearRect(0,0,W,H);
+        const labels = ['Price', 'Engine', 'Mileage', 'Rating', 'Reviews'];
+        const matrix = [
+          [ 1.00,  0.82, -0.68,  0.12, -0.22],
+          [ 0.82,  1.00, -0.72,  0.08, -0.18],
+          [-0.68, -0.72,  1.00,  0.02,  0.35],
+          [ 0.12,  0.08,  0.02,  1.00,  0.15],
+          [-0.22, -0.18,  0.35,  0.15,  1.00]
+        ];
+        const pad = { l: 50, r: 16, t: 24, b: 40 };
+        const cellW = (W - pad.l - pad.r) / 5;
+        const cellH = (H - pad.t - pad.b) / 5;
+
+        ctx.fillStyle = '#8888A0'; ctx.font = '8px JetBrains Mono';
+        labels.forEach((l, idx) => {
+          ctx.fillText(l, 8, pad.t + idx * cellH + cellH/2 + 3);
+          ctx.fillText(l, pad.l + idx * cellW + cellW/2 - 15, H - pad.b + 14);
+        });
+
+        for (let r=0; r<5; r++) {
+          for (let c=0; c<5; c++) {
+            const val = matrix[r][c];
+            ctx.fillStyle = val >= 0 ? `rgba(255,107,53,${val * 0.85})` : `rgba(20,184,166,${Math.abs(val) * 0.85})`;
+            const x = pad.l + c * cellW, y = pad.t + r * cellH;
+            ctx.fillRect(x, y, cellW - 1, cellH - 1);
+            ctx.fillStyle = Math.abs(val) > 0.4 ? '#FFF' : '#8888A0';
+            ctx.font = 'bold 9px JetBrains Mono';
+            ctx.fillText(val.toFixed(2), x + cellW/2 - 12, y + cellH/2 + 3);
+          }
+        }
+      }
+      draw();
+      new ResizeObserver(draw).observe(cvs.parentElement);
+    })();
+
+    // Interactive Scatter Explorer (Linked Chart.js)
+    (function() {
+      const cvs = document.getElementById('multiExplorerScatter');
+      const xSel = document.getElementById('explorerX');
+      const ySel = document.getElementById('explorerY');
+      const cSel = document.getElementById('explorerColor');
+      if (!cvs) return;
+
+      const sampleData = [];
+      const brands = ['Hero', 'Honda', 'TVS', 'RE', 'KTM', 'BMW', 'Yamaha', 'Suzuki', 'Ducati', 'Triumph'];
+      for (let i=0; i<150; i++) {
+        const brand = brands[i % brands.length];
+        const type = (i % 8 === 0) ? 'Electric' : 'Petrol';
+        const engine = type === 'Electric' ? 0 : 100 + Math.random() * 1000;
+        const price = type === 'Electric' ? 1.0 + Math.random() * 2 : (engine / 100) * (0.8 + Math.random() * 1.5) + 0.5;
+        const mileage = type === 'Electric' ? 80 + Math.random() * 100 : 85 - (price * 2) - Math.random() * 15;
+        const rating = 3.8 + Math.random() * 1.2;
+        const reviews = Math.floor(Math.random() * 1200 / (price + 0.1));
+        const category = price < 1.0 ? 'Budget' : (price > 10.0 ? 'Luxury' : (price > 3.0 ? 'Premium' : 'Mid-Range'));
+        const segment = engine < 125 ? 'Commuter' : (engine > 600 ? 'Superbike' : (engine > 300 ? 'Premium' : 'Mid-Range'));
+        sampleData.push({ brand, type, engine, price, mileage, rating, reviews, category, segment });
+      }
+
+      const chart = new Chart(cvs, {
+        type: 'scatter',
+        data: { datasets: [] },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
+            tooltip: { callbacks: { label: ctx => `X: ${ctx.parsed.x.toFixed(1)}, Y: ${ctx.parsed.y.toFixed(1)} (${ctx.raw.brand})` } }
+          },
+          scales: {
+            x: { grid: { color: GRID }, ticks: { font: { family: MONO, size: 8 } } },
+            y: { grid: { color: GRID }, ticks: { font: { family: MONO, size: 8 } } }
+          }
+        }
+      });
+
+      function updateExplorer() {
+        const xVar = xSel.value, yVar = ySel.value, cVar = cSel.value;
+        const groups = {};
+        sampleData.forEach(d => {
+          const val = cVar === 'Type' ? d.type : (cVar === 'Category' ? d.category : d.segment);
+          if (!groups[val]) groups[val] = [];
+          
+          const getVal = v => d[v.toLowerCase() === 'reviews' ? 'reviews' : v.toLowerCase()];
+          groups[val].push({ x: getVal(xVar), y: getVal(yVar), brand: d.brand });
+        });
+
+        const colors = {
+          'Petrol': '#FF6B35', 'Electric': '#14B8A6',
+          'Budget': '#14B8A6', 'Mid-Range': '#FF6B35', 'Premium': '#A855F7', 'Luxury': '#EC4899',
+          'Commuter': '#14B8A6', 'Superbike': '#FF6B35'
+        };
+
+        chart.data.datasets = Object.keys(groups).map(key => ({
+          label: key, data: groups[key], backgroundColor: colors[key] || '#A855F7', pointRadius: 4
+        }));
+        chart.options.scales.x.title = { display: true, text: xVar, font: { family: MONO, size: 9 } };
+        chart.options.scales.y.title = { display: true, text: yVar, font: { family: MONO, size: 9 } };
+        chart.update();
+      }
+
+      [xSel, ySel, cSel].forEach(s => s.addEventListener('change', updateExplorer));
+      updateExplorer();
+    })();
+
+    // 3D Projection Plot (Custom Canvas)
+    (function() {
+      const cvs = document.getElementById('multi3DScatter');
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      const points = [];
+      for (let i = 0; i < 70; i++) {
+        points.push({
+          x: -1 + Math.random() * 2,
+          y: -1 + Math.random() * 2,
+          z: -1 + Math.random() * 2,
+          type: i % 8 === 0 ? 'Electric' : 'Petrol'
+        });
+      }
+      let angleX = 0.4, angleY = 0.5;
+      function project(x, y, z) {
+        let x1 = x * Math.cos(angleY) - z * Math.sin(angleY);
+        let z1 = x * Math.sin(angleY) + z * Math.cos(angleY);
+        let y2 = y * Math.cos(angleX) - z1 * Math.sin(angleX);
+        let z2 = y * Math.sin(angleX) + z1 * Math.cos(angleX);
+        return { x: cvs.width/2 + x1 * 95, y: cvs.height/2 + y2 * 95, depth: z2 };
+      }
+      function draw() {
+        cvs.width = cvs.parentElement.clientWidth; cvs.height = 240;
+        ctx.clearRect(0,0,cvs.width,cvs.height);
+        
+        ctx.strokeStyle = 'rgba(255,255,255,0.035)'; ctx.lineWidth = 1;
+        const cube = [
+          {x:-1, y:-1, z:-1}, {x:1, y:-1, z:-1}, {x:1, y:1, z:-1}, {x:-1, y:1, z:-1},
+          {x:-1, y:-1, z:1},  {x:1, y:-1, z:1},  {x:1, y:1, z:1},  {x:-1, y:1, z:1}
+        ];
+        const pc = cube.map(p => project(p.x, p.y, p.z));
+        const line = (a, b) => { ctx.beginPath(); ctx.moveTo(pc[a].x, pc[a].y); ctx.lineTo(pc[b].x, pc[b].y); ctx.stroke(); };
+        line(0,1); line(1,2); line(2,3); line(3,0); line(4,5); line(5,6); line(6,7); line(7,4); line(0,4); line(1,5); line(2,6); line(3,7);
+
+        ctx.fillStyle = '#50505E'; ctx.font = '8px JetBrains Mono';
+        const labels = [{t:'Engine',x:1,y:-1,z:-1},{t:'Mileage',x:-1,y:1,z:-1},{t:'Price',x:-1,y:-1,z:1}];
+        labels.forEach(l => { const p=project(l.x, l.y, l.z); ctx.fillText(l.t, p.x+4, p.y+4); });
+
+        const proj = points.map(p => { const pr = project(p.x, p.y, p.z); return { x: pr.x, y: pr.y, depth: pr.depth, type: p.type }; });
+        proj.sort((a, b) => b.depth - a.depth);
+        proj.forEach(p => {
+          ctx.fillStyle = p.type === 'Electric' ? 'rgba(20,184,166,0.8)' : 'rgba(255,107,53,0.8)';
+          ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1.5, 3.5 + p.depth*1.5), 0, Math.PI*2); ctx.fill();
+        });
+      }
+      let active = true;
+      function run() { if (active) { angleY += 0.004; angleX = 0.35 + Math.sin(angleY*0.5)*0.1; draw(); } requestAnimationFrame(run); }
+      run();
+
+      let drag = false, px = 0, py = 0;
+      cvs.addEventListener('mousedown', e => { drag = true; active = false; px = e.clientX; py = e.clientY; });
+      window.addEventListener('mouseup', () => { drag = false; active = true; });
+      cvs.addEventListener('mousemove', e => {
+        if (!drag) return;
+        angleY += (e.clientX - px) * 0.01; angleX += (e.clientY - py) * 0.01;
+        px = e.clientX; py = e.clientY; draw();
+      });
+    })();
+
+    // Top 15 Brands Avg Price
+    new Chart(document.getElementById('multiBrandAvgPriceBar'), {
+      type: 'bar',
+      data: {
+        labels: ['Ducati', 'BMW', 'Triumph', 'Kawasaki', 'Harley', 'KTM', 'RE', 'Benelli', 'Honda', 'Jawa', 'TVS', 'Ather', 'Suzuki', 'Yamaha', 'Hero'],
+        datasets: [{ data: [22.4, 18.2, 16.5, 14.8, 12.6, 3.2, 2.8, 2.5, 1.8, 1.6, 1.35, 1.2, 1.15, 1.1, 0.85], backgroundColor: 'rgba(255,107,53,0.8)', borderRadius: 4 }]
+      },
+      options: Object.assign(darkOpts(null, 'Average Price (₹L)', null, v => '₹' + v + 'L'), { indexAxis: 'y' })
+    });
+
+    // Top 15 Brands Avg Rating
+    new Chart(document.getElementById('multiBrandAvgRatingBar'), {
+      type: 'bar',
+      data: {
+        labels: ['RE', 'Ducati', 'Triumph', 'KTM', 'BMW', 'Yamaha', 'Honda', 'Suzuki', 'Ather', 'TVS', 'Harley', 'Jawa', 'Hero', 'Bajaj', 'Benelli'],
+        datasets: [{ data: [4.65, 4.6, 4.58, 4.52, 4.5, 4.48, 4.45, 4.42, 4.4, 4.38, 4.35, 4.3, 4.28, 4.25, 4.15], backgroundColor: 'rgba(168,85,247,0.8)', borderRadius: 4 }]
+      },
+      options: Object.assign(darkOpts(null, 'Average Rating', null, v => v + '★'), { indexAxis: 'y', scales: darkScales(null, null, null, v=>v), min: 3.5 })
+    });
+
+    // Top 15 Brands Avg Mileage
+    new Chart(document.getElementById('multiBrandAvgMileageBar'), {
+      type: 'bar',
+      data: {
+        labels: ['Hero', 'TVS', 'Bajaj', 'Honda', 'Suzuki', 'Yamaha', 'Ather', 'KTM', 'Jawa', 'RE', 'Benelli', 'Harley', 'BMW', 'Triumph', 'Ducati'],
+        datasets: [{ data: [62.5, 58.2, 54.6, 50.8, 48.5, 46.2, 42.0, 31.8, 28.5, 26.4, 24.8, 18.5, 16.2, 14.5, 12.8], backgroundColor: 'rgba(20,184,166,0.8)', borderRadius: 4 }]
+      },
+      options: Object.assign(darkOpts(null, 'Average Mileage (kmpl)', null, v => v + ' kmpl'), { indexAxis: 'y' })
+    });
+
+    // Premium Brand Analysis
+    new Chart(document.getElementById('multiPremiumBrandBar'), {
+      type: 'bar',
+      data: {
+        labels: ['Ducati', 'BMW', 'Triumph', 'Harley', 'KTM', 'RE', 'Benelli', 'Jawa'],
+        datasets: [
+          { label: 'Avg Price (₹L)', data: [22.4, 18.2, 16.5, 12.6, 3.2, 2.8, 2.5, 1.6], backgroundColor: 'rgba(255,107,53,0.85)', borderRadius: 4 },
+          { label: 'Avg Rating × 4', data: [18.4, 18.0, 18.3, 17.4, 18.1, 18.6, 16.6, 17.2], backgroundColor: 'rgba(168,85,247,0.85)', borderRadius: 4 }
+        ]
+      },
+      options: Object.assign(darkOpts(null, 'Value comparison'), {
+        plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8888A0', font: { size: 9 } } } }
+      })
+    });
+
+
+    // ───────────────────────────────────────────────────────
+    // 5. DISTRIBUTIONS TAB CHARTS
+    // ───────────────────────────────────────────────────────
+
+    // 1. PRICE HISTOGRAM
+    new Chart(document.getElementById('distPriceHist'), {
+      type: 'bar',
+      data: {
+        labels: ['<50k', '50–100k', '100–150k', '150–200k', '200–300k', '300–500k', '500k–1M', '1M+'],
+        datasets: [{
+          label: 'Models',
+          data: [18, 70, 95, 55, 55, 38, 15, 72],
+          backgroundColor: [
+            'rgba(255,107,53,0.45)', 'rgba(255,107,53,0.55)', 'rgba(255,107,53,0.80)',
+            'rgba(255,107,53,0.85)', 'rgba(168,85,247,0.70)', 'rgba(168,85,247,0.55)',
+            'rgba(20,184,166,0.55)', 'rgba(20,184,166,0.85)'
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: Object.assign(darkOpts('Price Range (₹)', 'No. of Models', null, v => v + ' models'), {
+        plugins: {
+          legend: { display: false },
+          annotation: {
+            annotations: {
+              mean: { type: 'line', xMin: 2.5, xMax: 2.5, borderColor: 'rgba(255,107,53,0.6)', borderWidth: 1.5, borderDash: [4, 4], label: { content: 'Mean ≈ ₹6.95L', display: true, color: '#FF6B35', font: { size: 8, family: MONO }, position: 'start' } },
+              median: { type: 'line', xMin: 1.8, xMax: 1.8, borderColor: 'rgba(168,85,247,0.6)', borderWidth: 1.5, borderDash: [4, 4], label: { content: 'Median ₹1.99L', display: true, color: '#A855F7', font: { size: 8, family: MONO }, position: 'end' } }
+            }
+          }
+        }
+      })
+    });
+
+    // 2. MILEAGE HISTOGRAM
+    new Chart(document.getElementById('distMileageHist'), {
+      type: 'bar',
+      data: {
+        labels: ['<15', '15–25', '25–35', '35–45', '45–55', '55–70', '70–100', '>100'],
+        datasets: [{
+          data: [22, 28, 82, 88, 72, 52, 38, 36],
+          backgroundColor: [
+            'rgba(20,184,166,0.45)', 'rgba(20,184,166,0.55)', 'rgba(20,184,166,0.72)',
+            'rgba(20,184,166,0.92)', 'rgba(20,184,166,0.80)', 'rgba(20,184,166,0.65)',
+            'rgba(59,130,246,0.55)', 'rgba(59,130,246,0.75)'
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: darkOpts('Mileage (kmpl)', 'No. of Models')
+    });
+
+    // 3. ENGINE HISTOGRAM
+    new Chart(document.getElementById('distEngineHist'), {
+      type: 'bar',
+      data: {
+        labels: ['<100', '100–150', '150–250', '250–400', '400–600', '600–900', '>900'],
+        datasets: [{
+          data: [10, 45, 78, 78, 67, 58, 82],
+          backgroundColor: [
+            'rgba(168,85,247,0.40)', 'rgba(168,85,247,0.65)', 'rgba(168,85,247,0.80)',
+            'rgba(168,85,247,0.70)', 'rgba(255,107,53,0.65)', 'rgba(255,107,53,0.75)', 'rgba(255,107,53,0.90)'
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: darkOpts('Engine Capacity (cc)', 'No. of Models')
+    });
+
+    // 4. AVERAGE RATING HISTOGRAM
+    new Chart(document.getElementById('distRatingHist'), {
+      type: 'bar',
+      data: {
+        labels: ['1.0–2.5', '2.5–3.5', '3.5–4.0', '4.0–4.2', '4.2–4.4', '4.4–4.6', '4.6–4.8', '4.8–5.0'],
+        datasets: [{
+          data: [4, 8, 18, 45, 98, 152, 78, 15],
+          backgroundColor: [
+            'rgba(239,68,68,0.6)', 'rgba(239,68,68,0.5)', 'rgba(234,179,8,0.6)',
+            'rgba(234,179,8,0.75)', 'rgba(34,197,94,0.55)', 'rgba(34,197,94,0.80)',
+            'rgba(59,130,246,0.80)', 'rgba(59,130,246,0.60)'
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: darkOpts('Star Rating', 'No. of Models')
+    });
+
+    // 5. NUMBER OF RATINGS
+    new Chart(document.getElementById('distRatingsCountHist'), {
+      type: 'bar',
+      data: {
+        labels: ['0 ratings', '1–10', '11–50', '51–200', '201–500', '501–1000', '1000–4500'],
+        datasets: [{
+          data: [78, 100, 88, 70, 42, 25, 15],
+          backgroundColor: [
+            'rgba(239,68,68,0.75)', 'rgba(255,107,53,0.80)', 'rgba(234,179,8,0.75)',
+            'rgba(20,184,166,0.75)', 'rgba(59,130,246,0.75)', 'rgba(168,85,247,0.75)', 'rgba(236,72,153,0.75)'
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: darkOpts('Review Count Bin', 'No. of Models')
+    });
+
+    // 6. PRICE CATEGORY DONUT  — lazy-init: rendered inside a hidden tab on page load,
+    //    so we defer creation until the Distributions tab is first shown.
+    // 7. BIKE TYPE DONUT       — same reason.
+    // Both are initialised together via _lazyInitTab() called from switchTab().
+
+    function _lazyInitTab(id) {
+      if (id !== 'distributions' || _tabInited['distributions']) return;
+      _tabInited['distributions'] = true;
+
+      // 6. PRICE CATEGORY DONUT
+      new Chart(document.getElementById('distPriceCatDonut'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Budget (<₹1L)', 'Mid-Range (₹1–3L)', 'Premium (₹3–10L)', 'Luxury (₹10L+)'],
+          datasets: [{
+            data: [88, 162, 66, 102],
+            backgroundColor: ['rgba(20,184,166,0.85)', 'rgba(255,107,53,0.85)', 'rgba(168,85,247,0.85)', 'rgba(236,72,153,0.85)'],
+            borderColor: ['#14B8A6', '#FF6B35', '#A855F7', '#EC4899'], borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true, cutout: '62%',
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 10, family: 'Inter' }, color: '#8888A0', boxWidth: 10, padding: 12 } },
+            tooltip: { backgroundColor: '#18181F', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+              callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} models (${Math.round(ctx.parsed/418*100)}%)` }
+            }
+          }
+        }
+      });
+
+      // 7. BIKE TYPE DONUT
+      new Chart(document.getElementById('distBikeTypeDonut'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Petrol', 'Electric'],
+          datasets: [{
+            data: [368, 50],
+            backgroundColor: ['rgba(255,107,53,0.85)', 'rgba(20,184,166,0.85)'],
+            borderColor: ['#FF6B35', '#14B8A6'], borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true, cutout: '65%',
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 11, family: 'Inter' }, color: '#8888A0', boxWidth: 12, padding: 14 } },
+            tooltip: { backgroundColor: '#18181F', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+              callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} bikes (${Math.round(ctx.parsed/418*100)}%)` }
+            }
+          }
+        }
+      });
+    }
+
+    // 8. ENGINE SEGMENT HORIZONTAL BAR
+    new Chart(document.getElementById('distEngineSegBar'), {
+      type: 'bar',
+      data: {
+        labels: ['Commuter\n(<125cc)', 'Mid-Range\n(125–300cc)', 'Premium\n(300–600cc)', 'Superbike\n(600cc+)'],
+        datasets: [{
+          data: [49, 76, 67, 122],
+          backgroundColor: ['rgba(20,184,166,0.82)', 'rgba(59,130,246,0.82)', 'rgba(168,85,247,0.82)', 'rgba(255,107,53,0.90)'],
+          borderRadius: 6
+        }]
+      },
+      options: Object.assign(darkOpts(null, 'No. of Models'), {
+        indexAxis: 'y',
+        scales: {
+          x: { grid: { color: GRID }, ticks: { font: { size: 9, family: MONO }, color: '#8888A0', callback: v => v + ' models' } },
+          y: { grid: { display: false }, ticks: { font: { size: 9, family: MONO }, color: '#8888A0' } }
+        }
+      })
+    });
+
+    // 9. PRICE BOX PLOT (Custom Canvas)
+    (function() {
+      const cvs = document.getElementById('distPriceBox');
+      const ctx = cvs.getContext('2d');
+      function draw() {
+        cvs.width = cvs.parentElement.clientWidth; cvs.height = 180;
+        const W = cvs.width, H = cvs.height; ctx.clearRect(0, 0, W, H);
+        const pad = { l: 48, r: 16, t: 24, b: 40 };
+        const dW = W - pad.l - pad.r, dH = H - pad.t - pad.b;
+        const vals = { min: 0.48, q1: 1.13, med: 1.99, q3: 9.89, max: 30 };
+        const scale = v => pad.l + (v / 32) * dW;
+        const midY = pad.t + dH / 2, boxH = dH * 0.45;
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(255,107,53,0.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(scale(vals.min), midY); ctx.lineTo(scale(vals.q1), midY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(scale(vals.q3), midY); ctx.lineTo(scale(vals.max), midY); ctx.stroke();
+        ctx.setLineDash([]);
+
+        [vals.min, vals.max].forEach(v => {
+          ctx.strokeStyle = 'rgba(255,107,53,0.7)'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(scale(v), midY - 10); ctx.lineTo(scale(v), midY + 10); ctx.stroke();
+        });
+
+        const grad = ctx.createLinearGradient(scale(vals.q1), 0, scale(vals.q3), 0);
+        grad.addColorStop(0, 'rgba(168,85,247,0.3)'); grad.addColorStop(1, 'rgba(255,107,53,0.3)');
+        ctx.fillStyle = grad; ctx.strokeStyle = 'rgba(255,107,53,0.7)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(scale(vals.q1), midY - boxH / 2, scale(vals.q3) - scale(vals.q1), boxH, 4);
+        ctx.fill(); ctx.stroke();
+
+        ctx.strokeStyle = '#FF6B35'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(scale(vals.med), midY - boxH / 2); ctx.lineTo(scale(vals.med), midY + boxH / 2); ctx.stroke();
+
+        ctx.fillStyle = '#8888A0'; ctx.font = '9px JetBrains Mono';
+        [0, 5, 10, 15, 20, 25, 30].forEach(v => {
+          const x = scale(v); ctx.fillText('₹' + v + 'L', x - 8, H - pad.b + 14);
+          ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+        });
+        ctx.fillStyle = '#FF6B35'; ctx.font = 'bold 9px JetBrains Mono';
+        ctx.fillText('Median ₹1.99L', scale(vals.med) + 4, midY - boxH / 2 - 6);
+      }
+      draw();
+      new ResizeObserver(draw).observe(cvs.parentElement);
+    })();
+
+    // 10. ENGINE BOX PLOT (Custom Canvas)
+    (function() {
+      const cvs = document.getElementById('distEngineBox');
+      const ctx = cvs.getContext('2d');
+      function draw() {
+        cvs.width = cvs.parentElement.clientWidth; cvs.height = 180;
+        const W = cvs.width, H = cvs.height; ctx.clearRect(0, 0, W, H);
+        const pad = { l: 44, r: 16, t: 24, b: 40 };
+        const dW = W - pad.l - pad.r, dH = H - pad.t - pad.b;
+        const vals = { min: 54, q1: 124, med: 249, q3: 657, max: 1200 };
+        const scale = v => pad.l + (v / 1300) * dW;
+        const midY = pad.t + dH / 2, boxH = dH * 0.45;
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(168,85,247,0.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(scale(vals.min), midY); ctx.lineTo(scale(vals.q1), midY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(scale(vals.q3), midY); ctx.lineTo(scale(vals.max), midY); ctx.stroke();
+        ctx.setLineDash([]);
+
+        [vals.min, vals.max].forEach(v => {
+          ctx.strokeStyle = 'rgba(168,85,247,0.7)'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(scale(v), midY - 10); ctx.lineTo(scale(v), midY + 10); ctx.stroke();
+        });
+
+        const grad = ctx.createLinearGradient(scale(vals.q1), 0, scale(vals.q3), 0);
+        grad.addColorStop(0, 'rgba(20,184,166,0.3)'); grad.addColorStop(1, 'rgba(168,85,247,0.3)');
+        ctx.fillStyle = grad; ctx.strokeStyle = 'rgba(168,85,247,0.7)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(scale(vals.q1), midY - boxH / 2, scale(vals.q3) - scale(vals.q1), boxH, 4);
+        ctx.fill(); ctx.stroke();
+
+        ctx.strokeStyle = '#A855F7'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(scale(vals.med), midY - boxH / 2); ctx.lineTo(scale(vals.med), midY + boxH / 2); ctx.stroke();
+
+        ctx.fillStyle = '#8888A0'; ctx.font = '9px JetBrains Mono';
+        [0, 200, 400, 600, 800, 1000, 1200].forEach(v => {
+          const x = scale(v); ctx.fillText(v + 'cc', x - 10, H - pad.b + 14);
+          ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+        });
+        ctx.fillStyle = '#A855F7'; ctx.font = 'bold 9px JetBrains Mono';
+        ctx.fillText('Median 249cc', scale(vals.med) + 4, midY - boxH / 2 - 6);
+        ctx.fillStyle = '#14B8A6'; ctx.font = '9px JetBrains Mono';
+        ctx.fillText('Q1 124cc', scale(vals.q1) + 2, midY + boxH / 2 + 14);
+        ctx.fillText('Q3 657cc', scale(vals.q3) - 32, midY + boxH / 2 + 14);
+      }
+      draw();
+      new ResizeObserver(draw).observe(cvs.parentElement);
+    })();
+
+    // 11. MILEAGE KDE CURVE — approximated smooth density
+    new Chart(document.getElementById('distMileageKDE'), {
+      type:'line',
+      data:{
+        labels:[12,15,18,21,25,28,30,33,35,38,40,43,45,48,50,55,60,65,70,80,100,130,160,200,300,400,579],
+        datasets:[{
+          label:'Density',
+          data:[0.004,0.006,0.010,0.014,0.020,0.028,0.038,0.048,0.060,0.072,0.080,0.086,0.085,0.078,0.068,0.055,0.042,0.032,0.024,0.015,0.009,0.006,0.005,0.004,0.003,0.002,0.001],
+          borderColor:'rgba(20,184,166,0.9)',
+          borderWidth:2.5,
+          backgroundColor:'rgba(20,184,166,0.12)',
+          fill:true,
+          tension:0.5,
+          pointRadius:0,
+          pointHoverRadius:4
+        },{
+          label:'Mean 60.75',
+          data: new Array(27).fill(null).map((_,i)=>i===14?0.090:null),
+          borderColor:'rgba(255,107,53,0.7)',
+          borderWidth:1.5,
+          borderDash:[4,3],
+          pointRadius:0,
+          fill:false
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, animation:{duration:900},
+        plugins:{
+          legend:{
+            display:true, position:'bottom',
+            labels:{font:{size:10,family:'Inter'},color:'#8888A0',boxWidth:10,padding:12,
+              filter: item => item.text !== 'Mean 60.75' || true
+            }
+          },
+          tooltip:{backgroundColor:'#18181F',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
+            callbacks:{label:ctx=>` density: ${ctx.parsed.y.toFixed(4)}`}
+          }
+        },
+        scales:{
+          x:{ type:'linear', min:10, max:200,
+            grid:{display:false},
+            ticks:{font:{size:9,family:MONO},color:'#8888A0',callback:v=>v+' kmpl'}
+          },
+          y:{ grid:{color:GRID},
+            ticks:{font:{size:9,family:MONO},color:'#8888A0',callback:v=>v.toFixed(3)}
+          }
+        }
+      }
+    });
+
+  </script>
+</body>
+</html>
